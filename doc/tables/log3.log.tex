@@ -1,0 +1,30 @@
+. dsheckman lnwage educ exper c.exper\#c.exper age c.age\#c.age i.govern    ///
+>         if married_head == 1, sel(inlf = `controls')                    ///
+>         extra_controls(i.state i.occ i.race)
+{\smallskip}
+Double-selection Heckman              Number of obs               =      4,086
+                                      Selected                    =      2,521
+                                      Nonselected                 =      1,565
+                                      Number of controls          =        173
+                                      Number of selected controls =         34
+{\smallskip}
+\HLI{13}{\TOPT}\HLI{64}
+             {\VBAR}      Coef.   Std. Err.      z    P>|z|     [95\% Conf. Interval]
+\HLI{13}{\PLUS}\HLI{64}
+        educ {\VBAR}   .1063632   .0110214     9.65   0.000     .0847616    .1279649
+       exper {\VBAR}   .0438943   .0066448     6.61   0.000     .0308707    .0569179
+             {\VBAR}
+     c.exper\#{\VBAR}
+     c.exper {\VBAR}  -.0007106   .0003497    -2.03   0.042    -.0013961   -.0000252
+             {\VBAR}
+         age {\VBAR}   .0439828   .0247656     1.78   0.076    -.0045569    .0925225
+             {\VBAR}
+ c.age\#c.age {\VBAR}  -.0006758   .0003321    -2.03   0.042    -.0013267   -.0000249
+             {\VBAR}
+    1.govern {\VBAR}   .0515411   .0275837     1.87   0.062     -.002522    .1056042
+      lambda {\VBAR}  -.6099214   .2935242    -2.08   0.038    -1.185218   -.0346244
+       _cons {\VBAR}   7.696793   .4293922    17.92   0.000       6.8552    8.538387
+\HLI{13}{\BOTT}\HLI{64}
+{\smallskip}
+. est store model2
+{\smallskip}

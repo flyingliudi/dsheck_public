@@ -1,0 +1,1426 @@
+\documentclass[11pt]{article}
+
+\input{preamble.tex}
+
+%\newcommand*{\thisdraft}{This draft: October 3, 2021} 
+%\newcommand*{\firstdraft}{June 2022}  
+\date{July 2022}
+\begin{document}
+\maketitle
+
+\begin{abstract} 
+We extend the Heckman (1979) sample selection model by allowing for a large number of controls  that are selected using lasso under a sparsity scenario. %the assumption that the only a few of these controls are important. 
+The standard lasso estimation is known to under-select causing an omitted variable bias in addition to the sample selection bias. We outline the required adjustments needed to restore consistency of lasso-based estimation and inference for vector-valued parameters of interest in such models. The adjustments include double lasso for both the selection equation and main equation and a correction of the variance matrix. We also connect the estimator with results on redundancy of moment conditions. We demonstrate the effect of the adjustments using simulations and we investigate the determinants of female labor market participation and earnings in the US using the new approach. The paper comes with {\tt dsheckman}, a dedicated Stata command for estimating double-selection Heckman models. 
+\medskip
+
+\noindent JEL Codes: C13
+
+\noindent Key Words: Heckman, probit, double lasso, post selection inference
+		
+\end{abstract}
+
+\newpage \setstretch{1.5}
+\normalsize
+
+%------------------------------------------------------------------------------
+\section{Introduction}
+%------------------------------------------------------------------------------
+
+In this paper we consider an extension of the familiar \cite{Heckman1979} sample selection model, %. \textbf{DELETE: In its traditional forms, it} \textbf{ADD: which} 
+which can be written as follows
+\begin{eqnarray}
+	y_{1i} &=& \xvar_{1i}'\alphab + u_{1i},  
+	\label{eq:y1}\\
+y_{2i} &= &\Ind(\xvar_i'\betab+  \zvar_i' \etab + u_{2i} \geq 0),
+	\label{eq:y2}
+\end{eqnarray}
+where  $\Ind(\cdot)$ in the selection equation (\ref{eq:y2}) denotes the indicator function, which takes the value one if its argument is true and zero otherwise, $(u_{1i}, u_{2i})$ are the error terms and the outcome variable $y_{1i}$ is observed only if the selection variable $y_{2i} = 1$. The main equation (\ref{eq:y1}) contains a %(low-dimensional) 
+$k_1 \times 1$ vector of explanatory variables $\xvar_{1i}$ and we are interested in estimating and testing the coefficient vector $\alphab$. The explanatory variables of the selection equation are separated into two parts, $\xvar_i=(\xvar_{1i},\xvar_{2i})$ and $\zvar_i$. In the traditional version of the model there is no distinction between $\xvar_{2i}$ and $\zvar_i$ -- both represent the explanatory variables that are present in the selectivity model but not in the main equation of interest. These are the well known \emph{exclusion restrictions} that facilitate identification of $\alphab$. In our setting, for reasons that will become clear shortly we wish to differentiate between $\xvar_{2i}$ and $\zvar_i$. 
+
+Our extension is to introduce a high-dimensional vector of the explanatory variables in the selectivity model (\ref{eq:y2}) which may or may not belong to the model. The vector $\xvar$ is a
+low-dimensional $k \times 1$ vector of selection determinants that we wish to keep in the model no matter what. %of interest such that $\xvar_1$ is a subset of $\xvar$. 
+The vector $\zvar$ is a high-dimensional $p \times 1$ vector of potential
+controls, where $p$ can be as large as the (pre-selection) sample size $N$ or larger and where we do not know which of these controls are important, if any.  The vector
+$\betab$ is a $k \times 1$ vector of coefficients on $\xvar$, which can be a target of inference too. The vector $\etab$, on the contrary, is just a $p \times 1$ nuisance parameter vector. 
+
+This extension has many empirical applications in economics where we have a well defined list of regressors for the main equation which has roots in economic theory (e.g., consumer and labor theory) while what determines selection into the sample is less certain \cite[see, e.g.,][]{roy:51, heckman/honore:90}. The classic examples are the estimation of the female labor supply function and  wage functions \citep[see, e.g.,][]{Heckman1979, arellano/bonhomme:17}, which may be subject to selection bias as determinants of the sample selection are confounded with the behavioral functions of interest.
+We return to women's labor force participation and labor supply decisions in our empirical application section.
+
+Our objective is to consistently estimate $\alphab$ in the outcome equation
+(\ref{eq:y1}) under a potential sample selection bias arising from the fact that in the observed sample
+\[\mathbb{E}(y_{1i}| \xvar_i, \zvar_i, y_{2i}=1) = \xvar_{1i}'\alphab + \mathbb{E}(u_{1i}|  \xvar_i, \zvar_i, y_{2i}=1) \ne \xvar_{1i}'\alphab, \]
+unless $\mathbb{E}(u_{1i}|  \xvar_i, \zvar_i, y_{2i}=1)=0$, which is a questionable assumption in practice. \cite{Heckman1979} assumed joint normality of $(u_{1i}, u_{2i})$ and showed that $\mathbb{E}(u_{1i}|  \xvar_i, \zvar_i, y_{2i}=1)=\gamma \lambda(\xvar_i'\betab+  \zvar_i' \etab)$, where $\lambda(\cdot) = \phi(\cdot)/\Phi(\cdot)$ is known as the inverse Mills ratio. The two-step heckit procedure is (a) to run the maximum likelihood estimation (MLE) for the probit of $y_{2i}$ on $(\xvar_{i}, \zvar_i)$ and use the estimates $(\hat{\betab}, \hat{\etab})$ to obtain $\hat{\lambda}_i \equiv \lambda(\xvar_i'\hat{\betab}+  \zvar_i' \hat{\etab})$ and then (b) to regress $y_{1i}$ on $x_{1i}$ and $\hat{\lambda}_i$. Under correct specification, the resulting estimators $\hat{\alphab}$ and $\hat\gamma$ are consistent and the usual t-test on $\hat\gamma$ can be used to test for selection bias. If the null of no bias is rejected, the standard errors of the second step have to be corrected for the first step estimation error which is done via a full MLE using normality of the errors or via an analytic correction to the variance in the second step. 
+
+The high-dimensionality of
+$\zvar_i$ poses a challenge in applying the traditional two-step procedure. First, we cannot include all the variables in $\zvar_i$ in the first step because there are too many variables. If $p$ is larger than $N$, the probit with all $\xvar_i$ and $\zvar_i$ is
+infeasible, and even if $p$ is substantially smaller than $N$ but is large then including all these variables can cause difficulties in MLE convergence. 
+
+In order to make estimation feasible, it is common to impose a certain structure on $\eta$, known in the literature on regularized estimation as a sparsity scenario.  In particular, we assume that only a few elements in the coefficient vector $\eta$ are substantially different from zero. % or approximately zero. 
+Although we assume $\eta$ is sparse, we do not know which elements are non-zero
+and a consistent model selection technique is required.  A popular approach to regularizing linear models is the least
+absolute shrinkage and selection operator (lasso) developed by
+\cite{Tibshirani1996}. The method penalizes the objective function with an $l_1$-norm of the coefficients. This shrinks the irrelevant coefficients to zero and thus serves as a model selection tool. However, even for purely linear models, this approach has well known challenges.  
+
+First, lasso makes mistakes. Failure to account for the fact that the covariates have been selected by lasso results in invalid inference.  The reason is that lasso, like many other model selection techniques, does not always find all the relevant covariates especially when some coefficients are small. Model selection mistakes made by lasso cause the distribution of this naive estimator to be biased and nonnormal. For example,  \cite*{LPotscher2008b},
+\cite*{LPotscher2008}, and \cite*{PLeeb2009} %\textbf{DELETE: showed and ADD: show} 
+show that the normal approximation for the 
+naive lasso estimator will produce misleading inference.
+\cite*{bellonichernozhukovhansen2014}, \cite*{bellonichernozhukovwei2016}, and
+\cite{cherno/etal:18} derive estimators that are robust to the mistakes made by lasso.  Such robust estimators are often referred to as Neyman orthogonal (NO) estimators because they can be viewed as extensions of an approach proposed by \cite*{Neyman1959}.
+
+The second challenge is choosing the lasso tuning parameter.  Lasso's ability to select relevant covariates depends on the method used to choose the tuning parameters.
+\cite*{bellonichernozhukovhansen2014} propose a plug-in method and show that NO estimators perform well on linear models under that method.  \cite*{bellonichernozhukovwei2016} extend the linear lasso to logit models and show good performance using a simplified version of the plug-in method.  \cite*{drukker/liu:22} extend the plug-in method to cross-sectional generalized linear models and  provide Monte Carlo evidence that their extension works well in finite samples.  
+
+
+In this paper, we develop NO estimation for the model in (\ref{eq:y1})-(\ref{eq:y2}) which we call double-selection Heckman procesure, or DS-HECK. % for the coefficients of interest, which is $\alphab$ in the outcome Equation (\ref{eq:y1}). 
+The DS-HECK %{\dsheck} 
+estimator draws upon the
+classical two-step heckit estimator and the
+double-selection lasso for the high-dimensional generalized linear
+models proposed by \cite*{bellonichernozhukovwei2016}. We detail the steps involved in the estimation, work out the estimator properties and derive the variance corrections. We also provide new insights into how NO estimation is linked to results on redundancy of knowledge in moment-based estimation considered by \cite*{breusch/etal:99} and \cite{prokhorov/schmidt:09}.
+
+
+The rest of the paper is organized as follows. Section \ref{sec:model} describes and studies the DS-HECK %{\dsheck} 
+estimator.  In Section \ref{sec:sim}, we present simulation results that demonstrate an excellent performance of DS-HECK %{\dsheck} 
+in finite samples. In
+Section \ref{sec:app}, we apply DS-HECK %{\dsheck} 
+to estimate married women's wage using the 2013 PSID wave, 
+in the presence of high-dimensional controls and potential sample selection bias. Finally, Section \ref{sec:conclude} concludes. 
+
+		
+%------------------------------------------------------------------------------
+\section{The {\dsheck} estimator}\label{sec:model}
+%------------------------------------------------------------------------------
+
+%------------------------------------------------------------------------------
+	\subsection{Settings}
+%------------------------------------------------------------------------------
+
+%Formally, the high-dimensional Heckman sample selection model is 
+%\begin{align*}
+%	y_{1i} &= \xvar_{1i}'\alphab + u_{1i} \\ 
+%	y_{2i} &= \Ind(\xvar_i'\betab+  \zvar_i' \etab + u_{2i} \geq 0) 
+%\end{align*}
+We maintain the standard assumption of the Heckman sample selection
+model.
+
+\begin{assumption} \label{assump:heckman}
+(a) $(\xvar, \zvar, y_2)$ are always observed, $y_1$ is observed only
+when $y_2 =1$;
+(b) $(u_1, u_2)$ is independent of $\xvar$ and $\zvar$ with zero mean;
+(c) $u_2 \sim N(0, 1)$;
+(d) $\E(u_1 | u_2) = \gamma_1 u_2$.
+\end{assumption}
+
+Assumption \ref{assump:heckman} is in essence the same as in
+\citet[][p.~803]{wooldridge2010}. Part (a) describes the nature of sample
+selection. Part (b) assumes that $\xvar$ and $\zvar$ are exogenous. Part
+(c) is restrictive but needed to derive the conditional expectation of
+$y_1$ given that it is observed. Part (d) requires linearity in the conditional
+expectation of $u_1$ given $u_2$, and it holds when $(u_1, u_2)$ is bivariate normal. However, it also holds under weaker assumptions
+when $u_1$ is not normally distributed.
+
+%In order to consistently estimate $\alpha$, we will see that we need to
+%estimate $\betab$ consistently. 
+Additionally, we impose a sparsity scenario on $\etab$. %, as in \cite{belloni2016}, we assume it is sparse in the following sense.
+
+\begin{assumption} \label{assump:sparsity}
+$\eta$ is sparse; that is, most of the elements of $\etab$ are zeros. Namely, $||\etab||_0 \leq
+s$, where $||\cdot||_0$ denotes the number of non-zero components of a vector. We require $s$ to be small relative to the sample size $N$. In particular, 
+$\frac{s^2\log^2(max(p , N))}{N} \longrightarrow 0$.
+\end{assumption}
+
+This assumption follows \cite{bellonichernozhukovwei2016}. In the settings of generalized linear models, it allows for the estimation of the nuisance parameter in the selection equation at the rate
+$o(N^{-1/4})$ (see their Condition IR). In our settings, this rate is needed to guarantee the consistent estimation
+of $\betab$. % as stated in the Condition IR in \cite{bellonichernozhukovwei2016}.
+
+Under Assumption \ref{assump:heckman}, it is easy to show that %the outcome Equation (\ref{eq:y1}), and
+%the selection Equation (\ref{eq:y2}), we can write the the conditional
+%expectation of $\yvar_1$ given $\xvar$, $\zvar$, and $\yvar_2 = 1$ as
+\begin{align}
+\E(y_{1} | \xvar, \zvar, y_2 = 1) = \xvar_1'\alpha 
+	+ \gamma \lambda(\xvar'\betab + \zvar'\eta), \label{eq:y1cond}
+\end{align}
+where $\lambda(\cdot) = \phi(\cdot)/\Phi(\cdot)$ is the inverse Mills ratio.
+%For the derivation of Equation (\ref{eq:y1cond}), see \cite{Heckman1979} or
+%\cite{wooldridge2010}.
+In essence, this is the classic formulation of \cite{Heckman1979} where the presence of $\xvar_2$ and $\zvar$ in the selection equation (but not in the main equation of interest) permits estimation of the model even when the inverse Mills ratio is close to being linear in its argument\cite{}. 
+
+
+We wish to explore the behavior of this conditional expectation with respect to potential errors in the choice of $\zvar$. It is easy to see from applying the mean-value theorem to the inverse Mills ratio evaluated at  % study the Suppose now we know we know the true value of $\betab$, and we only use 
+%
+$\xvar'\betab$, % to compute the inverse mills ratio, what would the Equation\
+that we can rewrite (\ref{eq:y1cond}) as follows % become? We can use the taylor expansion to expand $\lambda(\xvar'\betab + \zvar'\eta)$ at the point $\xvar'\betab$.
+\begin{align}
+\E(y_{1} | \xvar, \zvar, y_2 = 1) 
+%	&= \xvar_1'\alphab + \gamma \lambda(\xvar'\betab + \zvar'\eta) \nonumber	\\
+	&= \xvar_1'\alphab + \gamma \lambda(\xvar'\betab) 
+	+\gamma \lambda^{(1)}(q) \zvar'\eta \nonumber \\
+	&= \xvar_1'\alphab + \gamma \lambda(\xvar'\betab) 
+	+ \zvar'\omega  \label{eq:y1cond2}
+\end{align}
+where $q$ is a point between $\xvar'\betab + \zvar'\eta$ and $\xvar'\betab$,
+$\lambda^{(1)}(\cdot)$ is the first-order derivative of $\lambda(\cdot)$,  and
+$\omega = \gamma \lambda^{(1)}(q) \eta$. It is well known that $\lambda^{(1)}(\cdot)$ is monotone and bounded between -1 and 0 \cite[see, e.g.,][]{sampford:53}. We note that $\omega$ %is a randomvcoefficient vector which 
+depends on $q$,  $\gamma$ and $\eta$, and that  %From the form of $\omega$, it follows that 
+if $\eta$ sparse than $\omega$ is sparse too. 
+\begin{prop} \label{prop:sparseomega}
+The vector $\omega$ in Eq.~(\ref{eq:y1cond2}) inherits the same  sparsity properties as the vector $\eta$, i.e.~$||\omega||_0=||\etab||_0$.
+\end{prop}
+
+\textbf{Proof.} Sketches of the proofs of all less obvious propositions are given in the Appendix. 
+
+This Proposition makes it clear that a Heckman model with sparsity in the selection equation can be written as a heckit model with the same sparsity scenario in the main equation of interest. %Following \cite{Heckman1979}, we note that the near linearity of implied near constancy of This justifies the use of lasso on a modified version of the standard heck-it model in which we remove the selectivity controls $\mathbf{z}$ from the Heckman correction and add them as controls to the main equation. 
+ %the alternative approaches to estimating this model. %the effects of this modification on consistency of the estimation. 
+Next we derive some conditions on the linear approximation of the inverse Mills ratio using $\zvar$ in the selected sample which is common for lasso-based model selection but new in the context of the Heckman model.
+
+Let $n$ denote the size of the selected sample, defined as follows, 
+\[n = \sum_{i=1}^N\mathbb{I}(y_{2i}=1).\]
+Then, for the selected observations, we can write
+\[y_{1i} = \xvar_{1i}'\alpha + g(\xvar_i, \zvar_i) + \epsilon_i,\]
+where $g(\xvar_i, \zvar_i)=\gamma \lambda(\xvar_i'\beta+ \zvar_i'\eta)$, $\mathbb{E}(\epsilon_i|\xvar_i, \zvar_i) = 0$ and $\mathbb{V}(\epsilon_i|\xvar_i, \zvar_i) = \sigma^2$. 
+We follow \cite{bellonichernozhukovhansen2014} and write $g(\xvar_i, \zvar_i)$ in a linear form subject to a bound on the approximation error:
+\begin{equation}\label{eq:r}y_{1i} = \xvar_{1i}'\alpha + \gamma \lambda(\xvar_i'\beta) + \zvar_i'\delta + r_i + \epsilon_i,
+\end{equation}
+where $r_i, i=1,\ldots, n,$ is the approximation error such that $\sqrt{\frac{1}{n}\sum_{i=1}^n \mathbb{E}r_i^2} = O\left(\sqrt{\frac{s}{n}}\right)$. Additionally, we assume that the selected and pre-selection sample sizes are of the same order.
+\begin{assumption} \label{assump:r&n}
+Eq.~(\ref{eq:r}) holds in the selected sample with $n=O(N)$ and 
+\[\sqrt{\frac{1}{n}\sum_{i=1}^n \mathbb{E}r_i^2} = O\left(\sqrt{\frac{s}{n}}\right).\]
+\end{assumption}
+The assumption on the approximation error follows \cite{bellonichernozhukovhansen2014}. Similar to Assumption \ref{assump:sparsity}, Assumption \ref{assump:r&n} ensures that we can estimate the nuisance parameter in the selected sample at the rate $o(n^{−1/4})$ rate. In the context of the Heckman model, it implies that $||\delta||_0=||\omega||_0=||\eta||_0 \le s$ and that $\delta$ is also estimated at $o(N^{-1/4})$ since  $n = O(N )$.
+
+Next we investigate how to consistently estimate this model accounting for the high-dimensional nuisance parameter in both equations.
+
+\begin{comment}
+
+\begin{prop} \label{prop:sampford}
+The vector $\omega$ in Eq.~(\ref{eq:y1cond2}) inherits the same  sparsity properties as the vector $\eta$, i.e.~$||\omega||_0=||\etab||_0$.
+\end{prop}
+
+In
+order to apply the double-selection Lasso in \cite{belloni/etal:13} to a linear
+model, we assume that $\zvar'\omega$ can be approximated by a sparse linear
+model.
+
+\begin{assumption} \label{assump:sparsity2}
+We assume $\zvar'\omega = \zvar'\zeta + \epsilon_z$, with $\zeta$ to be a sparse
+non-random coefficient vector, and $\epsilon_z$ is mean-zero approximation
+errors uncorrelated to $\zvar$ and $\xvar$. 
+\end{assumption}
+
+\dil{(!! We need to justify Assumption \ref{assump:sparsity2}.  Suppose $\zeta =
+\gamma \E(\lambda^{(1)}(q)) \eta$, then it is indeed sparse if $\eta$ is sparse.
+However, it implies $\epsilon_z = \zvar \gamma (\lambda^{(1)}(q) -
+\E(\lambda^{(1)}(q))) \eta$, and $\epsilon_z$ will not be independent from
+$\xvar$ and $\zvar$ because the point $q$ depends on them.)}
+Cite the boundedness result from Sampford 1953.
+
+Under Assumption \ref{assump:sparsity2} and Equation (\ref{eq:y1cond}), we can
+write $\E(\yvar_{1} | \xvar, \zvar, y_2 = 1)$ as
+\begin{align}
+\E(\yvar_{1} | \xvar, \zvar, y_2 = 1) 
+	&= \xvar_1'\alphab + \gamma \lambda(\xvar'\betab) 
+	+ \zvar'\zeta  \label{eq:y1cond2linear}
+\end{align}
+
+Under Assumption \ref{assump:heckman} and Equation (\ref{eq:y2}), we can write 
+$\Pr(\yvar_2 = 1 | \xvar, \zvar)$ as
+\begin{align}
+\Pr(\yvar_2 = 1 | \xvar, \zvar) = \Phi(\xvar'\beta + \zvar'\eta)
+\label{eq:y2cond}
+\end{align}
+
+\end{comment}
+%------------------------------------------------------------------------------
+	\subsection{Estimation of the selection equation}
+%------------------------------------------------------------------------------
+
+
+%Equations (\ref{eq:y1cond2}) and (\ref{eq:y2cond}) are our key intuition to
+%design the proposed {\dsheck} estimator.  Here is the logic.
+
+Clearly if we knew the true value of $\betab$, we could treat $\lambda(\xvar'\betab)$
+as a known variable and we could estimate $\alphab$ and $\gamma$, treating $\delta$ as nuisance parameters. So we start with a consistent estimation of $\betab$ in Eq.~(\ref{eq:y2}) using the approach of \cite{bellonichernozhukovwei2016} combined with parameter tuning of \cite{drukker/liu:22}.
+
+
+The estimation involves three steps:
+
+						%% algo dsprobit
+%\begin{algorithm}[H]\label{algo:dsprobit}
+%\caption{Double selection probit
+%(based on the double-selection logit in \cite{belloni2016})}
+	\begin{description}
+%%%
+	\item{\bf Step 1 (post-lasso probit)} We start by estimating a penalized probit of $y_2$ on $\xvar$ and $\zvar$ using the lasso penalty:
+	\begin{align*}
+		(\hat{\betab}, \hat{\etab}) &= 
+		\argmin_{\betab, \etab} 
+		\En(\Lambda_i(\betab, \etab)) + \lambda_1 ||(\betab,
+		\etab)||_1, 
+	\end{align*}
+	where $\En$ denotes the sample mean of $N$ observations, $\Lambda_i(\cdot)$ is the negative log-likelihood for the probit
+	model, $||\cdot||_1 $ is the lasso ($l_1$) norm of the parameters and $\lambda_1$ is a tuning parameter chosen using the plug-in method of 
+	\cite{drukker/liu:22}. This produces a subset of the variables in $\zvar$ indexed by $support(\hat{\etab})$, where for a $p$-vector $v$, $support(v):=\{ j \in \{1, ..., p\}: v_j \ne 0\}$. These variables are used in the post-lasso probit:
+	\begin{align*}
+		(\tilde{\betab}, \tilde{\etab}) &= 
+		\argmin_{\betab, \etab} 
+		\En(\Lambda_i(\betab, \etab)): support(\etab) \subseteq
+		support(\hat{\etab}) 
+	\end{align*}
+    As a result, we obtain the sparse probit estimates $(\tilde{\betab}, \tilde{\etab})$ where $\tilde{\etab}$ contains only a few non-zero elements. \cite{bellonichernozhukovwei2016} propose using these estimates to construct weights
+	$\hat{f}_i = \hat{w}_i/\hat{\sigma}_i$, where $\hat{w}_i =
+	\phi(\xvar_i'\tilde{\betab} + \zvar_i'\tilde{\etab})$, and 
+	$\hat{\sigma}_i^2 = \Phi(\xvar_i'\tilde{\betab} + \zvar_i'\tilde{\etab})
+	(1 - \Phi(\xvar_i'\tilde{\betab} + \zvar_i'\tilde{\etab}))$, for $i=1,\ldots, N$.
+
+%%%
+	\item{\bf Step 2}. We use the weights from Step 1, to run a weighted lasso regression in which for each variable $x_j$ in $\xvar$, $j=1, \ldots, k$, we run the penalized regression of $\hat{f}_i x_{ij}$ on $\hat{f}_i \zvar_i$,
+	\begin{align*}
+	\hat{\theta}_j = \argmin_{\theta_j} 
+	\En (\hat{f}_i^2(x_{ij} - \zvar_i'\theta_j)^2) 
+	+ \lambda_2||\theta_j||_1,
+	\end{align*}
+	where $\lambda_2$ is chosen by the plug-in method of \cite{drukker/liu:22}. For each element of $\xvar$, this produces a selection from the variables in $\zvar$ indexed by $support({\hat{\theta}}_j), j=1, \ldots, k$.   
+
+%%%
+	\item{\bf Step 3 (double-selection probit)}. We use the variables selected from $\zvar$ in Steps 1 and 2 to run the probit of $y_2$ on $\xvar$ and the union of the sets of variables selected in Steps 1 and 2:
+	\begin{align*}
+	(\check{\betab}, \check{\eta}) 
+	= \argmin_{\beta, \eta} \En (\Lambda_i(\betab, \eta)\hat{f}_i/\hat{\sigma}_i), 
+	\end{align*}
+	where $support(\eta) \subseteq 
+	\left(support({\hat{\etab}})
+	\cup support({\hat{\theta}}_1) 
+	 \cup \ldots \cup support(\hat{\theta}_J)\right)$.
+	\end{description}
+%\end{algorithm}
+
+In the setting of generalized linear models, \cite{bellonichernozhukovwei2016} show that the double-selection probit corrects for the omitted variable bias introduced by a naive application of lasso to Eq.~(\ref{eq:y2}). The intuition is that the double selection using weights $\hat{f}_i$ ``neymanizes'' Step 3. That is, it ensures that the estimation error from the first step does not affect the estimated parameter vector of the last step. 
+
+It follows from \citet[][Theorem 1]{bellonichernozhukovwei2016} that, under Assumption \ref{assump:sparsity}, 
+$\check{\betab}$ is a consistent estimator of  $\betab$ and its variance can be obtained from Step 3 using the well known ``sandwich'' formula for probit. For example, in Stata it can be obtained using the \texttt{vce(robust)} syntax. We obtain a regular $\sqrt{N}$-consistent estimator of $\beta$ with standard inference, even though a penalized non-$\sqrt{N}$ estimator is being used to carry out model selection for the high-dimensional nuisance parameter $\eta$.
+% following the \texttt{probit} command. 
+%We
+%can apply the double-selection lassos to Equation (\ref{eq:y1cond2}) for the
+%inference for $\alphab$ and $\gamma$ in the presence of high-dimensional and
+%sparse $\zeta$; see \cite*{bellonichernozhukovhansen2014}.
+
+%However, we do not know the true value of $\betab$. Instead, if we can obtain
+%consistent estimate for $\betab$ and its standard errors, we can still apply the
+%double-selection lasso method but with variance adjustment. 
+
+%So, the question is reduced to how to obtain valid inference for $\beta$. The
+%solution is to apply the double selection Probit to Equation (\ref{eq:y2cond}).
+%Double selection Probit is just a particular case of Double selection for
+%the generalized linear model proposed in \cite{belloni2016}.
+
+
+%------------------------------------------------------------------------------
+	\subsection{Connection to redundancy of moment conditions}
+%--------------------------------------------
+
+\cite{bellonichernozhukovwei2016} use the Neyman orthogonalization to obtain their result. In this section we show how NO argument relates to the concept of moment redundancy pioneered by \cite{breusch/etal:99}. This offers an alternative way of arriving at the weights derived by 
+\cite{bellonichernozhukovwei2016}. 
+
+The key insight of \cite{bellonichernozhukovwei2016} is that the weights $f_i$ ensure the validity of the main moment condition: 
+\begin{equation}\label{eq:no}
+    \mathbb{E} g_i(\beta_0, \eta_0, \theta_0) \equiv \mathbb{E} [y_{2i} - \Phi(\xvar'_i\beta_0 +\zvar_i'\eta_0)](f_i\xvar_i - f_i\zvar_i'\theta_0) = 0, 
+\end{equation}
+where the instruments $(f_i\xvar_i - f_i\zvar_i'\theta_0)$ are chosen so that   
+\[\mathbb{E}\frac{\partial}{\partial \eta} g_i(\beta_0, \eta_0, \theta_0) = 0.\]
+It is easy to see that for $f_i = \frac{\phi(\xvar'_i\beta_0 +\zvar_i'\eta_0)}{\sigma_i^2}$, where $\sigma_i^2=\mathbb{V}(y_i|\xvar_i, \zvar_i)=\Phi(\xvar_i'{\beta}_0 + \zvar_i'{\eta}_0)
+	(1 - \Phi(\xvar_i'{\beta}_0 + \zvar_i'{\eta}_0))$, the zero expected derivative condition holds. See Eq.(28) of \cite{bellonichernozhukovwei2016}.
+
+What has not been noted is that these conditions correspond to what \cite{prokhorov/schmidt:09} call \emph{moment and parameter redundancy} (M/P-redundancy), that is the situation when neither the knowledge of the additional moment conditions nor the knowledge of the parameter they identify help improve efficiency of estimation. 
+
+
+To see this, let $\xvar_i$ be a scalar for notational simplicity, and write the moment conditions identifying $\beta$ and $\eta$ as follows
+%\begin{equation}\label{eq:h1}
+%    \mathbb{E}h_{1i}(\theta_0) \equiv  \mathbb{E} f_i \zvar_i(f_i\xvar_i - f_i\zvar_i'\theta_0) = 0
+%\end{equation}
+%denote the moment conditions that identify $\theta$. This is the moment condition used to generate the regressor for the second step of a two-step estimation. 
+%The second step uses the moment condition 
+\begin{eqnarray}\label{eq:gmm1}
+\mathbb{E}h_{1i}(\beta_0, \eta_0) \equiv \mathbb{E}(y_{2i}-\Phi(\xvar_i' \beta_0 + \zvar_i'\eta_0) )f_i\xvar_i = 0,\\\label{eq:gmm2}
+\mathbb{E}h_{2i}(\beta_0, \eta_0) \equiv \mathbb{E}(y_{2i}-\Phi(\xvar_i' \beta_0 + \zvar_i'\eta_0) )f_i\zvar_i = 0,
+\end{eqnarray}
+%to identify $\beta$. 
+where the subscript ``0'' on a parameter denotes the true value. 
+These moment conditions correspond to the first order conditions of the probit and stem from the specification $\mathbb{P}(y_{2i}=1|\xvar_i, \zvar_i) = \Phi(\xvar'_i\beta_0 +\zvar_i'\eta_0)$. % and it is a function of $\theta$ because $\xvar_i = \zvar_i'\theta_0 + error$. 
+
+This is the system of moment conditions  considered by \cite{breusch/etal:99} %\cite{prokhorov/schmidt:09} 
+in the Generalized Method of Moments (GMM) framework. See their Eq.(6). %(3A)-(3B).
+They show that the (optimal) GMM estimation based on Eqs.(\ref{eq:gmm1})-(\ref{eq:gmm2}) is equivalent to the estimation based on Eq.(\ref{eq:gmm2}) and the error in the linear projection of Eq.(\ref{eq:gmm1}) on Eq.(\ref{eq:gmm2}). Using their notation, we can write the equivalent moment system as follows
+\begin{eqnarray}\label{eq:lp}
+\mathbb{E}[h_{1i}(\beta_0, \eta_0)- \Omega_{12}\Omega_{22}^{-1}h_{2i}(\beta_0, \eta_0)] = 0,\\\label{eq:h2}
+\mathbb{E}h_{2i}(\beta_0, \eta_0)  = 0,
+\end{eqnarray}
+where $\Omega_{12}$ and $\Omega_{22}$ are the relevant parts of the moment variance matrix
+\[\Omega\equiv \mathbb{V}\left[\begin{array}{c}h_{1i}(\beta_0, \eta_0)\\h_{2i}(\beta_0, \eta_0)\end{array}\right]=\left[\begin{array}{cc}\Omega_{11}&\Omega_{12}\\ \Omega_{21}&\Omega_{22}\end{array}\right].\] 
+
+It is easy to see that Eq.(\ref{eq:lp}) coincides with Eq.(\ref{eq:no}) subject to the additional notation that $\theta'_0 = \Omega_{12}\Omega_{22}^{-1}=\mathbb{E}\sigma^2_i f^2_i \xvar_i \zvar_i' [\mathbb{E}\sigma^2_i f^2_i \zvar_i \zvar'_i]^{-1}$. It is also easy to see that the entire estimation problem can be written in the GMM framework as follows:
+\begin{eqnarray}\label{eq:1}
+    \mathbb{E} g_i(\beta_0, \eta_0, \theta_0) &\equiv &\mathbb{E} [y_{2i} - \Phi(\xvar'_i\beta_0 +\zvar_i'\eta_0)](f_i\xvar_i - f_i\zvar_i'\theta_0) = 0, \\\label{eq:2}
+\mathbb{E}h_{2i}(\beta_0, \eta_0) &\equiv& \mathbb{E}(y_{2i}-\Phi(\xvar_i' \beta_0 + \zvar_i'\eta_0) )f_i\zvar_i = 0\\\label{eq:3}
+\mathbb{E}h_{3i}(\theta_0) &\equiv& \mathbb{E}\sigma_i f_i \zvar_i(\sigma_i f_i\xvar_i - \sigma_i f_i\zvar_i'\theta_0)=0,  
+\end{eqnarray}
+where the first equation is Eq.(\ref{eq:no}) above, % of \cite{bellonichernozhukovwei2016}, 
+the second equation is the moment condition that identifes $\eta_0$ and the third equation is a modified (through the inclusion of the scalar $\sigma_i$) version of the OLS first-order conditions used to estimate $\theta_0$. 
+
+We note that, due to a separability result of  \cite{ahn/schmidt:95}, we cannot improve on the estimation of $\theta_0$ by estimating it jointly with $(\beta_0, \eta_0)$ %ased on the same number of moment conditions as the number of elements in $\theta_0$ does not affect the asymptotic distribution of the GMM estimator of $\beta_0$ and $\eta_0$ 
+because the additional conditions (\ref{eq:1})-(\ref{eq:2}) only determine $\theta_0$ in terms of 
+$\beta_0$ and $\eta_0$. See also \citet[][Statement 6]{prokhorov/schmidt:09}. We further note that by Statement 7 of \cite{prokhorov/schmidt:09}, joint estimation of the entire vector $(\beta_0, \eta_0, \theta_0)$ is equivalent to a two-step estimation where $\theta_0$ is estimated first and the second step is adjusted for the estimation error of the first step. 
+
+More importantly, because the correlation between the moment functions in Eqs.(\ref{eq:1}) and (\ref{eq:2}) is zero and the expected derivative of Eq.(\ref{eq:1}) with respect to $\eta$ is zero, the condition of partial redundancy of \citet[][Theorem 7]{breusch/etal:99} holds (in their notation $G_{21}=0$ and $\Omega_{21}=0$). This means the moment condition (\ref{eq:2}) is redundant for the estimation of $\beta$ (\emph{M-redundancy}). Additionally, these conditions are sufficient to show that the knowledge of the value of $\eta_0$ is redundant (\emph{P-redundancy}). See Statement 4 of \cite{prokhorov/schmidt:09}. So the NO condition of   \cite{bellonichernozhukovwei2016} corresponds to a well established situation in GMM estimation when neither the knowledge of the parameter $\eta_0$, nor the knowledge of the moment condition (\ref{eq:2}) helps estimate $\beta_0$. %l;;lboth the moment conditions  can help estimate en conclude this section by showing that hey sho both the knowledge of $\theta_0$ and the knowledge of Eq.(\ref{eq:h1}) do not help estimate $(\beta, \eta)$ more precisely if $h_{1i}(\theta_0)$ and $h_{2i}(\beta_0, \eta_0, \theta_0)$ are uncorrelated and the expected derivative of $h_{2i}(\beta, \eta, \theta)$
+
+%------------------------------------------------------------------------------
+	\subsection{Choice of penalty parameter}
+%------------------------------------------------------------------------------
+The penalty parameters, $\lambda_1$ and $\lambda_2$ can be derived analytically but typically, data-driven methods are used. Their theoretical validity and practical performance have been well studied. For example, cross-validation or AIC typically under-penalize (over-select) by including too many variables to reduce bias, compared with BIC or plug-in methods. %There are also %Another approach suggested in %Section 4.2 of [13] relies on new Gaussian approximation results and can be implemented via a %multiplier bootstrap procedure. 
+Additionally, when too many variables are selected, this violates the sparsity assumption required for the double lasso to work. 
+
+Plug-in methods have been shown to perform well in a multitude of settings %\cite*{drukker/liu:21}, 
+\cite[see, e.g.,][]{drukker/liu:22, belloni/cherno/hans/kozbur:16, bellonichernozhukovhansen2014}. 
+
+%------------------------------------------------------------------------------
+	\subsection{Estimation of the main equation}
+%------------------------------------------------------------------------------
+
+
+We can now return to the estimation of $\alphab$ and $\gamma$. Similar to \cite{bellonichernozhukovwei2016}, \cite{bellonichernozhukovhansen2014} %\textbf{DELETE: observed and ADD: observe}
+observe that the direct application of lasso to linear models with a large-dimensional nuisance parameter results in a biased estimation of the parameter of interest, which in their case is a scalar treatment effect. They propose a double selection procedure. We follow their approach subject to a few modifications that reflect the specifics of our main equation. 
+
+First, with a consistent estimator of $\betab$, a natural estimator of the inverse Mills ratio in Eq.~(\ref{eq:y1cond2}) is as follows: \[\widehat{\lambda(\xvar_i'\betab)}
+	= \phi(\xvar_i'\check{\betab})/\Phi(\xvar_i'\check{\betab}).\] 
+It is also natural to account for the fact that this is a generated regressor when constructing the variance matrix, something we consider later.
+
+Second, \cite{bellonichernozhukovhansen2014} derive their results for a scalar parameter. Because the variables of interest $\xvar$ %$and $\lambda(\xvar'\betab)$ 
+form a vector, we need to extend the
+original double selection lasso estimation to vectors. We provide the details of this extension using the NO arguments in Appendix
+\ref{sec:dsvec}. 
+
+We can now discuss the estimation of the main equation which combines the double selection lasso of \cite{bellonichernozhukovhansen2014} and parameter tuning by \cite{drukker/liu:22}. It proceeds in three steps: 
+\begin{description}
+
+	\item{\bf Step 1}. We run the lasso regression of $\yvar_1$ on $\zvar$
+	\begin{align*}
+		\check{\theta}_y = \argmin_{\theta_y} \mathbb{E}_n\left[(y_{1i} - \zvar_i'\theta_y)^2\right] 
+		+ \lambda_1 ||\thetab_y||_1.
+	\end{align*}
+	%where $\lambda_1$ is chosen by the plugin method described in
+	%\cite{Drukker/liu:22}.
+%
+This produces a subset of $\zvar$ indexed by $support(\check{\theta}_y)$.
+	\item{\bf Step 2}.
+	For each variable $x_{1j}$ in $\xvar_1$, $j=1, \ldots, k_1$, we run the lasso regression of $x_{1j}$ on $\zvar$:
+	\begin{align*}
+		\check{\theta}_j = \argmin_{\theta_j} \mathbb{E}_n\left[(x_{1ij} - \zvar_i'\theta_j)^2\right] 
+		+ \lambda_2 ||\theta_j||_1.
+	\end{align*}
+	Additionally, we run the lasso regression of $\widehat{\lambda(\xvar_i'\betab)}$ on $\zvar$:
+	\begin{align*}
+		\check{\theta}_j = \argmin_{\theta_\lambda} \mathbb{E}_n\left[(\widehat{\lambda(\xvar_i'\betab)} - \zvar_i'\theta_j)^2\right] 
+		+ \lambda_2 ||\theta_\lambda||_1.
+	\end{align*}	
+This step produces subsets of $\zvar$ indexed by $support(\check{\theta}_j), j=1, \ldots, k_1$, and  $support(\check{\theta}_\lambda)$.	
+%
+	\item{\bf Step 3}. We run the regression of $y_{1i}$ on $\xvar_{1i}$, $\widehat{\lambda(\xvar_i'\betab)}$, and the union of the sets selected in Steps 1 and 2:
+	\begin{align*}
+	(\widehat{\alpha}, \widehat{\gamma}, \widehat{\theta})
+	=
+	\argmin_{\alpha, \gamma, \theta} \mathbb{E}_n \left[(y_{1i} - \xvar_{1i}'\alpha - 
+		\widehat{\lambda(\xvar_i'{\betab})}\gamma 
+		- {\zvar}_i'\theta)^2\right],
+	\end{align*}
+	where $support(\theta) \subseteq support(\check{\theta}_y) \cup 
+	support(\check{\theta}_1)
+	\cup
+	\ldots \cup
+	support(\check{\theta}_J)
+	$
+
+\end{description}
+
+
+\begin{prop}\label{prop:heckit}
+Under Assumptions \ref{assump:heckman}-\ref{assump:r&n}, the %double selection heck-it 
+DS-HECK estimation in Steps 1-3 above is consistent for $\alpha$ and $\gamma$ and 
+%$(\widehat{\alpha}, \widehat{\gamma}, \widehat{\theta})$ are consistent estimators of 
+post-double-selection inference on $\alpha$ and $\gamma$ is valid.
+%  but wee need to adjust the variacen due to the estimation of beta.
+\end{prop}
+
+The DS-HECK estimator corrects the bias generated by applying the lasso directly to Eq.~(\ref{eq:y1cond2}). The simulation experiments we report in Section \ref{sec:sim} illustrate the size of bias.
+
+Following \cite{bellonichernozhukovhansen2014}, we can claim that inference about the vector $(\alpha', \gamma)$ is valid but, unlike \cite{bellonichernozhukovhansen2014}, it is valid up to the variance matrix correction reflecting the post-lasso probit estimation of $\betab$. 
+
+\begin{comment}
+
+\vskip 1cm
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	\begin{algorithm}[H]\label{algo:dsheckman}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\caption{The {\dsheck} estimator}
+\begin{enumerate}
+	\item {\bf Choose the proxy variables}.  Use Lasso to set $\xvar$ as
+	variables to predict the inverse mills ratio. Notice that we can impose
+	$\xvar$ to always include $\xvar_1$ when use lasso to select variables. 
+
+	\item \label{algo:dsheck_step2} {\bf Obtain consistent estimates
+	$\check{\betab}$ for $\betab$}.  For details, see the double selection
+	probit in Algorithm \ref{algo:dsprobit}. 
+
+	\item {\bf Predict inverse mills ratio} $\widehat{\lambda(\xvar\betab)}
+	= \phi(\xvar\check{\betab})/\Phi(\xvar\check{\betab})$.
+
+	\item {\bf Obtain consistent estimates $\widehat{\alpha}$ and
+	$\widehat{\gamma}$} by using double selection linear regression of $y_1$
+	on $\xvar_1$, $\widehat{\lambda(\xvar\betab)}$, and $\zvar$ as nuisance
+	parameter.  For details, see Algorithm \ref{algo:dsregress}.
+	\label{algo:dsheck_step4}
+
+	\item {\bf Adjust variance} due to the estimation of $\betab$. For
+	details, see Algorithm \ref{algo:adjv}.
+	\label{algo:dsheck_step5}
+	\end{enumerate}
+
+\end{algorithm}
+
+
+
+
+%------------------------------------------------------------------------------
+% algo:dsprobit
+%------------------------------------------------------------------------------
+\newpage
+
+In Step \ref{algo:dsheck_step2} of Algorithm \ref{algo:dsheckman}, we need to
+obtain consistent estimator of $\betab$ and its standard errors.  We apply double
+selection for the probit model, which is a special case of \cite{belloni2016}.
+Algorithm \ref{algo:dsprobit} describes this procedure.
+
+\bigskip
+
+%------------------------------------------------------------------------------
+% algo:dsregress
+%------------------------------------------------------------------------------
+
+\newpage
+
+In Step \ref{algo:dsheck_step4} of Algorithm \ref{algo:dsheckman},  we apply
+double selection for the linear model to Equation \ref{eq:y1cond2}; see
+\cite*{bellonichernozhukovhansen2014}.  Algorithm \ref{algo:dsregress}
+describes this procedure.
+
+\bigskip
+%------------------------------------------------------------------------------
+%	algorithm for dsregress
+%------------------------------------------------------------------------------
+\begin{algorithm}[H]\label{algo:dsregress}
+\caption{Double selection for linear model (vector version of the
+double-selection in \cite{belloni:14}}
+\begin{description}
+
+	\item{\bf Step 1}. Lasso of $\yvar_1$ on $\zvar$
+	\begin{align*}
+		\check{\theta_y} \in \argmin \En((\yvar_1 - \zvar'\theta_y)^2) 
+		+ \lambda_1 ||\thetab_y||_1
+	\end{align*}
+	where $\lambda_1$ is chosen by the plugin method described in
+	\cite{Drukker/liu:22}.
+%
+
+	\item{\bf Step 2}.
+	For each variable $m$ in $\xvar_1$ and $\widehat{\lambda(\cdot)}$
+	($j=1, \ldots, J$), run lasso of $m$ on $\zvar$.
+	\begin{align*}
+		\check{\theta_j} \in \argmin \En((m - \zvar'\theta_j)^2) 
+		+ \lambda_2 ||\theta_j||_1
+	\end{align*}
+	where $\lambda_2$ is chosen by the plugin method described in
+	\cite{Drukker/liu:22}.
+%
+	\item{\bf Step 3}.
+	OLS of $\yvar_1$ on $\xvar_1$, $\widehat{\lambda(\cdot)}$, and
+	$\zvar^*$. $\zvar^*$ is  all the selected variables in Steps 1 and 2.
+	\begin{align*}
+	(\widehat{\alpha}, \widehat{\gamma}, \widehat{\theta})
+	\in
+	\argmin \En((\yvar_1 - \xvar_1'\alpha - 
+		\widehat{\lambda(\xvar'\check{\betab})}\gamma 
+		- {\zvar^*}'\theta)^2)
+	\end{align*}
+	where $support(\theta) \subseteq support(\check{\theta_y}) \cup 
+	support(\check{\theta_1})
+	\cup
+	\ldots \cup
+	support(\check{\theta_J})
+	$
+
+	$\widehat{\alpha}$ and $\widehat{\gamma}$ are consistent point
+	estimates of $\alpha$ and $\gamma$, but we need to adjust variance
+	because $\betab$ is estimated.
+
+\end{description}
+\end{algorithm}
+
+%------------------------------------------------------------------------------
+% algo: adjust variance
+%------------------------------------------------------------------------------
+
+\newpage
+
+
+
+
+We need to adjust variance for $\widehat{\alphab}$ and $\widehat{\gamma}$
+obtained in Algorithm \ref{algo:dsregress} because $\widehat{\lambda(\cdot)}$
+is estimated. Algorithm \ref{algo:adjv} describes how to adjust variance, which
+is basically a implementation of Delta method.
+\bigskip
+\end{comment}
+%------------------------------------------------------------------------------
+%	adjust variance
+%------------------------------------------------------------------------------
+\subsection{Variance matrix estimation}
+
+%\begin{algorithm}[H]\label{algo:adjv}
+%\caption{Adjust variance for double-selection Heckman}
+
+We start with some new notation. Let $\hat{\lambda}_i = \widehat{\lambda(\xvar_i'{\betab})}=\lambda(\xvar_i'\check{\betab})$ and define 
+\[	\xi_i = \hat{\lambda}_i(\hat{\lambda}_i + \xvar_i' \check{\betab}),
+\]
+where $\check{\betab}$ is obtained by the double selection probit. %Step 3 of Algorithm
+%	\ref{algo:dsprobit}.
+%	{\Phi\left( {\xvar'_i\check{\betab}} \right)} 
+%\]
+%\begin{enumerate}
+%	\item The inverse of mills ratio for each observation $i$ is $m_i$
+%	$$
+%	m_i = \frac{\phi\left( {\xvar\check{\betab}} \right)_i}
+%	{\Phi\left( {\xvar\check{\betab}} \right)_i} 
+%	$$
+%	where $\check{\betab}$ is obtained in Step 3 of Algorithm
+%	\ref{algo:dsprobit}.%
+%	\item We also define $\xi_i$
+%	$$
+%	\xi_i = m_i(m_i + \xvar_i' \check{\betab})
+%	$$
+%	\item Suppose regression the Step 3 of Algorithm \ref{algo:dsregress} is 
+Let $e$ denote the vector of residuals from the last step of the double selection lasso estimation, with typical element $e_i, i=1, \ldots, n$. That is, %define 	OLS of $y_1$ on $\xvar_1$, $m_i$, $\zvar^{*}$, where $\zvar^{*}$ is the all the selected variables of $\zvar$.  Compute the regression residuals
+\[e_i = y_{1i} - \xvar_{1i}'\widehat{\alpha} - \widehat\lambda_i \widehat{\gamma} -
+	{\zvar}_i'\widehat{\theta},\]
+where $support(\theta) \subseteq support(\check{\theta}_y) \cup 
+	support(\check{\theta}_1)
+	\cup
+	\ldots \cup
+	support(\check{\theta}_J)
+$. Let $W$ denote the matrix containing $\xvar_1$, the $n\times 1$ vector of $\hat{\lambda}_i$'s, and the variables in $\zvar$ that survived the double selection. Let $R$ be a $n\times n$ diagonal matrix, with diagonal elements $(1- \hat{\rho}^2\xi_i)$, where 
+$\hat{\rho} = \widehat{\gamma}/\widehat{\sigma}$ and 
+ $\hat{\sigma}^2 = (e'e + \widehat{\gamma}^2\sum_i \xi_i)/n$.
+
+\begin{prop}\label{prop:var}
+A consistent estimator of the variance matrix of the DS-HECK estimator $	(\widehat{\alpha}', \widehat{\gamma}, \widehat{\theta}')$ is 	$$
+		V = \hat{\sigma}^2 (W'W)^{-1}(W'RW + Q )(W'W)^{-1},
+	$$	where $$
+	Q = \hat{\rho}^2 (W' D \xvar) V_b (\xvar'D W)
+	$$
+	and $V_b$ is the ``sandwich'' variance matrix for the double selection probit estimator $\check{\betab}$ and $D$ is the diagonal matrix with diagonal elements $\xi_i$.
+\end{prop}
+
+
+ The variance for $\widehat{\alpha}$ and $\widehat{\gamma}$ is the
+	upper $(k_1+1)\times(k_1+1)$ submatrix of $V$. The {\tt dsheckman} command implements this variance estimator.
+%	\end{enumerate}
+
+%\end{algorithm}
+
+
+%------------------------------------------------------------------------------
+\section{Monte Carlo Simulations} \label{sec:sim}
+%------------------------------------------------------------------------------
+
+To evaluate the finite-sample performances of DS-HECK, we conduct a simulation study using four estimators: (i) ordinary least squares on the selected sample (\emph{OLS}), (ii) Heckman two-step estimator based on the true model (\emph{Oracle}), (iii) Heckman two-step estimator using lasso to select variables
+in Eq.~(\ref{eq:y2}) (\emph{Naive}), and the proposed double selection Heckman estimator (\emph{DS}). We have implemented the DS-HECK estimator in the Stata
+command {\tt dsheckman}, available on the authors' web pages along with data sets and codes for the simulations and application, and we describe its syntax in Appendix \ref{sec:dsheckman_syntax}.
+
+\emph{OLS} is inconsistent unless there is no sample selection bias, i.e. $\gamma=0$.  \emph{Naive} is inconsistent due to error made by lasso. Moreover, \emph{Naive} does not provide valid inference as it is not robust to the
+model selection bias. In contrast, \emph{DS} is expected to retain consistency in the presence of sample selection biases and show robustness against the model
+selection bias. \emph{Oracle} is expected to behave like the standard Heckman
+estimator under the true model but, in practice, \emph{Oracle}
+is infeasible since we do not know the true model.
+%It is interesting to see how the double-selection Heckman estimator behaves
+%compared with the oracle, OLS, and naive estimators.
+%------------------------------------------------------------------------------
+\subsection{Setup}
+%------------------------------------------------------------------------------
+
+Our data generating process is as follows
+\begin{align*}
+y_1 & = 1 + x_1 + x_2 + u_1\\
+y_2 &= \mathbb{I} ( \xvar' \beta_0 + \zvar'\eta_0 + u_2 \ge 0), 
+\end{align*}
+where $u_2 \sim N(0, 1)$ and where $u_1 = \gamma u_2 + \epsilon$ and $\epsilon \sim N(0, 1)$ is independent of $u_2$. We vary the strength  of the selection bias by setting $\gamma$ to be $0.4, 0.5, 0.6, 0.7$, and $0.8$ and we observe $y_1$ only when $y_2 = 1$.
+
+The selection equation is generated using nine non-zero variables in $\zvar$ of which four have a relative large effect and five relatively small:
+\begin{align*}
+\xvar' \beta_0 + \zvar'\eta_0 &= -1.5 + x_1 - x_2 + z_1 - z_2 + 0.046z_3 + z_5 -
+0.046z_{10}  - 0.046z_{11} + 0.046z_{12} - 0.046z_{15} + z_{20}.
+\end{align*}
+The value $0.046$ is chosen so that it violates the so called ``beta-min'' condition and causes lasso to make model selection mistakes \cite[see, e.g.,][]{liu/etal:20, drukker/liu:22}.  The sample size is $2000$. The number of
+replications is $1000$. 
+
+We consider two scenarios for  $p$, the dimension of $\zvar$: (i) $p = 1000$, fewer variables than observations; (ii) $p=2100$, more variables than observations. The variables are generated using a Toeplitz correlation structure with decreasing
+dependence. In particular, let $Z$ be the matrix of dimension $N
+\times p$ containing $\zvar$, then 
+\begin{align*}
+Z = M L'
+\end{align*} 
+where $M$ is $N \times p$ and has the typical element
+$(\zeta_{ij} -15)/\sqrt{30}$, where $\zeta_{ij} \sim
+\chi^2(15)$ and where $L$ is the Cholesky decomposition of a symmetric Toeplitz
+matrix $V$ of dimension $p \times p$ such that its elements obey the following laws: $V_{i,j} =
+V_{i-1, j-1}$ and $V_{1, j}= j^{-1.3}$.
+
+The variables $\xvar$ are also correlated and they are generated as functions of $\zvar$. In
+particular,
+\begin{align*}
+x_1 &= z_3 +z_{10} + z_{11} +z_{12} + z_{15} + \epsilon_{x_1} \\
+x_2 &= 0.5(z_3 +z_{10} + z_{11} +z_{12} + 2z_{15}) + \epsilon_{x_2}
+\end{align*}
+where $\epsilon_{x_1}$ and $\epsilon_{x_2}$ follow a Toeplitz structure similar
+to $Z$.
+
+As a result, for the selected sample, the true model
+is 
+\begin{align*}
+	y_1 = 1 + x_1 + x_2 + \gamma\lambda(\xvar' \beta_0 + \zvar'\eta_0) + u
+	\label{eq:model}
+\end{align*}
+where $\lambda(\cdot) = \phi(\cdot)/\Phi(\cdot)$ and the true parameter values are
+$\beta_1 = \beta_2 = 1$ and $\gamma = 0.4, 0.5, 0.6, 0.7$, or $0.8$.
+
+%------------------------------------------------------------------------------
+\subsection{Results}
+%------------------------------------------------------------------------------
+
+For each estimator, we report the following measures:
+(i) true value of parameter (\emph{True}), (ii) mean squared error (\emph{MSE}),  (iii) average of estimates  across simulations (\emph{Mean}) (iv) standard deviation of estimates across simulations (\emph{SD}), (v) average standard
+error across simulations ($\overline{SE}$) and (vi) rejection rate for the $H_0$ that the parameter equals its true value against the nominal 5\% level of significance (\emph{Rej.~rate}).
+
+We report the %\textbf{DELETE: simluation and ADD: simulation} 
+simulation results for $\beta_1$, $\beta_2$, and $\gamma$ in Tables \ref{tab:x1}, \ref{tab:x2} and \ref{tab:gamma}, respectively. Several observations are clear from the tables. First, \emph{OLS} is badly biased and the bias is greater when selection is stronger. Second, \emph{Naive} is also biased and it fails to provide valid
+inference at any value of $\gamma$ and $p$. This demonstrates that \emph{Naive} is not robust to the model selection errors. The rejection rate and MSE increase as $\gamma$ increases, which is expected
+because greater $\gamma$ value indicate a greater sample selection bias. Third, \emph{Oracle} shows consistency and rejection rates close to the nominal 5\% significance level. Fourth, \emph{DS} performs similarly to \emph{Oracle} for all values of $\gamma$ and $p$. In
+particular, its MSE is consistently smaller than for \emph{Naive} and \emph{OLS}, 
+$\overline{SE}$ is close to \emph{SD}, which shows that the proposed variance adjustment works well. Finally, \emph{Rej.~rate} for \emph{DS} is near the 5\% significance level, which
+supports that our estimator offers valid inference.
+
+
+\begin{center}
+\begin{tabular}
+[c]{l}\hline\hline
+TABLE \ref{tab:x1} ABOUT\ HERE\\\hline\hline
+\end{tabular}
+\end{center} 
+
+\begin{center}
+\begin{tabular}
+[c]{l}\hline\hline
+TABLE \ref{tab:x2}  ABOUT\ HERE\\\hline\hline
+\end{tabular}
+\end{center} 
+
+\begin{center}
+\begin{tabular}
+[c]{l}\hline\hline
+TABLE \ref{tab:gamma}  ABOUT\ HERE\\\hline\hline
+\end{tabular}
+\end{center} 
+
+
+
+%------------------------------------------------------------------------------
+\section{Application to Female Earnings Estimation} \label{sec:app}
+%------------------------------------------------------------------------------
+\subsection{Labor force participation and earnings}
+Estimation of the female earnings equation is a topic of long standing interest among economists.
+%\dil{!!We need fix the citation in this section, right now, the citation are hard coded.}
+%have been long studying labor supply behavior of individuals
+%including both their probability as well as hours of working and wage rates.
+%Originally the focus was on men but later it shifted to women. The lives of
+Early investigations of the labor supply decisions including both participation and hours by married women date back to \cite{gronau:74} and \cite{heckman:74}, who were among the first
+to highlight sample selection bias stemming from the labor supply decision. % when estimating wage offer regressions. The progress of women in 
+Labor market decisions by women over
+the later decades have been studied and documented by \cite{Mroz:87, ahn/power:93, neumark/korenman:94, vella:98, devereux:04, blau/kahn:07, mulligan/rubinstein:08, cavalcanti:08, bar/etal:15}, among others.
+
+Numerous applied works have extensively scrutinized the empirical aspects of the
+sample selection problem when estimating female labor market behavior. The
+determinants of the earnings equations for married women are similar to those of
+men and have been mostly agreed upon. These determinants traditionally include
+women’s education, experience, age, tenure and location. %, among others. %\footnote{Refer to any of the above mentioned papers for verification.}
+The hallmark of correcting for sample selection bias is finding some appropriate
+exclusion restriction(s) (i.e., variable(s) affecting selection but not the earnings) % outcome of main interest) 
+in order to ensure proper identification of the model
+parameters. Two main competing choices of such exclusion restrictions have been
+exploited for estimation of labor market earnings for married women:
+non-wife/husband’s income and the existence or number of (young) children. The
+underlying argument is that these two sets of variables affect the labor supply decision
+of married women but not their earnings. \cite{huber/mellace:14}
+provide an overview of the related literature on sample selection bias in
+the female earnings equations. 
+
+\cite{cavalcanti:08}
+provide an alternative view and argue that the declining price and wider
+availability of home appliances play a crucial role in explaining the rise in
+female labor force participation. This suggests a long list of % leading us to admit that the debate about the best 
+potential exclusion restrictions. % can be quite long. %is still ongoing. 
+Furthermore, the exact nature and
+functional form of the chosen exclusion restriction(s) in the selection
+equation is uncertain. %might still be arguably open to further investigation. To give an example, 
+For example, %how 
+should %one measure 
+labor work experience %of an individual  -- in
+%be measured in 
+include years of %full-time employment or in years that contain 
+part-time employment? % as well? how 
+Should %one account for the 
+educational attainment %of an individual? 
+be measured in %In 
+full
+years of completed education % completed? 
+or %Or, perhaps, it is the indicator for 
+in millstones 
+%educational levels -- 
+such as high school or college, % degrees -- that should be
+%used instead of (or in addition to) the full years of education completed.
+as a replacement or complement to years of education?
+Similarly, should age %of an individual 
+enter the model in a linear or %form of a liner or
+quadratic form? %function? 
+%In what follows we attempt to allow the data to speak for
+%themselves when answering those questions regarding the determinants of the
+%selection equation (as well as their functional forms) when estimating the
+%female earnings equation. 
+
+Our %ultimate 
+goal in this section is to illustrate the performance of the double-selection Heckman procedure on %an actual empirical setting. To do so we estimate 
+the following earnings equation : 
+\begin{equation}
+\log\left(  earnings\right)
+=\alpha_{0}+\alpha_{1}education+\alpha_{2}\mathbf{x}_1+\alpha_{3}state\text{
+}dummies+u_1,\label{wreg}
+\end{equation}
+where $\log\left  (earnings\right)$ is the natural logarithm of the individual's
+total annual labor income, $education$ is the person's completed years of
+education, $state\text{ }dummies$ is a vector containing a full set of state
+dummies, and $u_1$ is an idiosyncratic error.  The vector $\mathbf{x}_1$ varies
+across the exact specification we consider % of Eq.~(\ref{wreg}) considered 
+and can
+contain age and/or work experience. % of the person in either linear or quadratic functional form.  
+
+
+%We acknowledge 
+To address the potential self-selection bias %issue present in the earning equation
+%(\ref{wreg}) when estimated as is. Thus, 
+we employ DS-HECK %the double-selection Heckman
+%approach we propose 
+as a data-driven procedure for choosing the explanatory variables and functional
+form (among high-dimensional options provided) %for construction of the
+%inverse Mills ratio based on %the estimation results from 
+in the following
+%first-step 
+labor force participation equation: 
+\begin{equation}
+inlf=\mathbf{x}\beta+\mathbf{z}\eta+u_2,\label{probit}
+\end{equation}
+where $inlf$ is the dummy variable that is equal to one for those women who are
+in the labor force at the time of the interview and zero otherwise, and $u_2$ is
+an idiosyncratic error. The vector $\mathbf{x}$ includes all the explanatory
+variables from Eq.~(\ref{wreg}) (both in a liner and quadratic
+functional form) as well as exclusion restrictions.  
+
+In practice, $\mathbf{x}$ is constructed as follows. To simplify notation,
+denote all the explanatory variables from Eq.~(\ref{wreg}) as $\mathbf{x}_1$.
+First, running lasso probit of $inlf$ on high-dimensional controls $\mathbf{w}$,
+where $\mathbf{w}$ includes $\mathbf{x}_1$ and some other high-dimensional
+controls.  Denote the selected variables as $\mathbf{x}_2$. Second, $\mathbf{x}$
+is union between all $\mathbf{x}_1$ and $\mathbf{x}_2$. All the non-selected
+controls in $\mathbf{w}$ are used as $\mathbf{z}$.
+
+%\textbf{Change
+%the wording if needed to match the final version of the paper when we get
+%there.} 
+
+\subsection{Sample construction}
+
+We obtain our sample from the 2013 wave of the Panel Study of Income Dynamics
+(PSID) where we %. To 
+focus on the sub-population of
+%the high-dimensional variable selection process (rather than the economics behind labor earnings), we employ the data for 
+white married women. % only. %[WHAT DOES THAT MEAN?] 
+The choice of explanatory variables %in the earnings and selection equations 
+reflects their availability in the PSID and %while we generally follow the
+the traditional set of regressors %the explanatory variables 
+used in the existing literature on
+female labor force participation and earnings. Specifically, the explanatory
+variables we collect from the PSID include information on the educational
+attainment of the individual (both as the number of years completed and as a
+set of indicators for milestone achievements in education), a set of indicators
+for whether the individual obtained her education in the USA, outside the USA,
+or both, as well as a set of indicators for the educational levels of the
+individual's parents, work experience of the individual, age and geographical
+location of the individual (captured by a set of dummy variables for the current
+state where the individual is located), a set of indicators reflecting the
+Beale-Ross rural-urban continuum code for the individual's current residence,
+and an indicator for whether the individual owns a vehicle. Table \ref{tb:BaselineXs} contains a description of the key explanatory variables.
+
+
+
+
+\begin{center}
+\begin{tabular}
+[c]{l}\hline\hline
+TABLE \ref{tb:BaselineXs} ABOUT\ HERE\\\hline\hline
+\end{tabular}
+\end{center}
+
+The set of (potential) exclusion restrictions includes the number of children in
+the household under 18 years of age, an indicator for whether there are any
+children age 15 years old or younger in the individual's household, annual labor
+income of the husband, child care expenses, and household major
+expenditure (i.e. expenditure on household furnishings and equipment, including
+household textiles, furniture, floor coverings, major appliances, small
+appliances and miscellaneous housewares). %The latter variable is meant to test
+%the argument of Cavalcanti and Tavares (2008) that wider availability of home
+%appliances plays a prominent role in explaining the rise in female labor force
+%participation. 
+While admittedly far from ideal, this last variable is the closest information
+we find in the PSID to capture household expenditure on major household
+appliances, which allows us to test the argument of \cite{cavalcanti:08}. Finally, the dependent variables for the earnings and selection
+equations are (the natural logarithm of) the individual's total annual labor
+income and the indicator for whether the individual is in the labor force,
+respectively.
+
+Our sample contains 1,989 white married women, of whom 1,294 are in the labor force and 695 are not. Table
+\ref{tb:SumStats} reports summary statistics for key variables in the dataset. % used in our analysis. 
+A set of dummy variables for the current state %of the individuals 
+as well as a
+set of indicators reflecting the Beale-Ross rural-urban continuum code %for the individual's current residence 
+are omitted to save space.  %from Table \ref{tb:SumStats} but th used as part of the explanatory variables in both the labor income and selection equations. % in our analysis. 
+A total of 46 states are present in our sample, with
+Delaware, District of Columbia, Hawaii, New Mexico, and Rhode Island omitted %are dropped
+from our sample during %the 
+data cleaning. % process.
+We note that some women report being neither employed nor
+(temporarily) unemployed while also reporting non-zero labor income during that
+time. %, as reflected in Table \ref{tb:SumStats}. Specifically, 
+There are 161 such
+women in the sample. %For the purposes of our analysis, w
+We treat these
+individuals as not being in the labor force. % as they report themselves.
+
+
+\begin{center}%
+\begin{tabular}
+[c]{l}\hline\hline
+TABLE \ref{tb:SumStats} ABOUT\ HERE\\\hline\hline
+\end{tabular}
+\end{center} 
+
+
+
+
+\subsection{Empirical findings}
+
+We consider several specifications when estimating the earnings equation subject to sample selection bias. Table \ref{tb:AllEstRes} reports the key results for both equations obtained using DS-HECK. The top panel provides %a subset of 
+coefficient estimates (as well as their standard
+errors) for $\alpha_1, \alpha_2$ and the coefficient on the inverse Mills ratio
+while the bottom panel provides  estimates (and standard errors) for $\beta$. %obtained using the double selection probit  
+In addition to the reported estimates, %explanatory variables for each column of Table %
+%\ref{tb:ProbitEstRes} described above, all probit specifications in Table \ref{tb:ProbitEstRes} 
+each specification contains two more sets of of estimates which we do not report in the table to save space. First, we do not report the coefficients on the full set of state and urban-rural dummies included in both equations. Second, for each specification there are the selected controls in both equations; the number of such controls is reported at the bottom of the respective panels but the coefficients themselves are not reported. % but the relevant coefficients are not reported to save space. %participation additional control variables and a set of
+%potential exclusion restrictions. These additional variables/exclusion
+%restrictions and their definitions are provided in Table \ref{tb:BaselineXs}.
+%Coefficient estimates for the variables included in each probit specification
+%that are not reported in Table \ref{tb:ProbitEstRes} are not selected by lasso
+%except for the full set of state and urban-rural dummies. We omit the
+%coefficient estimates for the latter dummy variables from Table
+%\ref{tb:ProbitEstRes} to preserve space (even though these dummy variables are
+%among the ones required to be part of the first-step explanatory variables to
+%include the explanatory variables from the second step).
+
+We note that following the original Heckman specification, the explanatory variables present in the
+earnings equation are always %imposed by our procedure to be 
+kept in the labor force participation equation. %its first step regardless of 
+%and %whether they are actually selected by 
+The lasso selection is not applied to them, only to the additional controls. %in the first step or
+%not. 
+Columns (1) and (2) %of Table \ref{tb:ProbitEstRes} 
+report the estimates %s a subset of the
+%first-step estimation results 
+when work experience %in a quadratic form enters
+%the set of the first-step explanatory variables but only work experience in a
+%linear form is present in the labor income equation and thus required to be
+%among the ``selected" controls in the first step. 
+enters the two equations, with and without the quadratic form, while age is not included. Columns (3) and (4) report the estimate when age is included but experience is not. Columns (5) and (6) contain both but differ in whether experience squared is included. Column (7) reports the estimates of the traditional Heckman specification where no selection is done over the additional controls.   
+%is identical to
+%column (1) except that work experience in a quadratic form is required to be
+%among the ``selected" controls in the probit step. Columns (3) and (4) are
+%similar to columns (1) and (2) except that they produce a subset of the
+%first-step estimation results when the individual's age (instead of work
+%experience as in columns (1)-(2)) is a part of the set of the first-step
+%explanatory variables. Columns (4) and (5) follow the logic of the previous two
+%pairs of columns but report a subset of the first-step estimation results when
+%both age and work experience enter the set of the explanatory variables in the
+%first step of our analysis.  
+
+\begin{center}%
+\begin{tabular}
+[c]{l}\hline\hline
+TABLE \ref{tb:AllEstRes} ABOUT\ HERE\\\hline\hline
+\end{tabular}
+\end{center}
+
+% Finally, column (7) in
+%Table \ref{tb:ProbitEstRes} reports a subset of the estimated coefficients from
+%the first step probit used in the traditional two-step Heckman sample selection
+%procedure where the total number of the explanatory variables from probit
+%specification (6) is used as a set of the explanatory variables.
+
+
+
+
+As Table \ref{tb:AllEstRes} suggests, the signs of all the reported coefficient
+estimates %of the reported selected explanatory variables 
+are as expected, and
+they are highly significant for the most part. We note that from the five
+potential exclusion restrictions, % offered to lasso to select from, 
+the lasso
+%method 
+selects child care expenditure as the relevant covariate for the labor force participation equation - %. %in our probit
+%step. 
+this %latter 
+variable %plays the role of an  exclusion restriction %in our analysis 
+%as it 
+is not present in %the %second step of our estimation procedure for
+the earnings equation. Finally, we note that the results for the labor force participation equation reported in %first step results in 
+column (7) are similar
+to those reported in columns (5) and (6) except that the three additional exclusion
+restrictions %(if there are children under 15 years old, the number of children, and labor income of the individual's husband) 
+turn out to be statistically
+significant in the traditional setting. 
+
+
+Next we focus on the estimates of the labor income equation.% reported in Table \ref{tb:MainEstRes}. 
+%The estimation results reported in Table
+%\ref{tb:AllEstRes} represent the entire set of explanatory variable
+%used in the labor income equation except for a full set of state dummy
+%variables as well as a full set of urban-rural %dummy variables. , which are
+%omitted to preserve space. 
+%Columns (1)-(6) %of Table \ref{tb:MainEstRes} 
+%are
+%based on the probit specifications (1)-(6) from %respectively. Finally, column (7) reports all the estimated coefficients from
+%the second step of the traditional two-step Heckman sample selection procedure
+%(except for the state and urban-rural dummies) where probit specification (7)
+%from Table \ref{tb:ProbitEstRes} is used as the (traditional) first step. 
+%\begin{center}%
+%\begin{tabular}
+%[c]{l}\hline\hline
+%TABLE \ref{tb:MainEstRes} ABOUT\ HERE\\\hline\hline
+%\end{tabular}
+%\end{center}
+According to the results reported in Table \ref{tb:AllEstRes}, we conclude that the educational
+level of the individual plays a crucial role in explaining labor income for
+white married women in 2012. When statistically significant, the estimated rate
+of return to education ranges from 5.6\% to almost 9\% depending on the
+specification. Furthermore, there is evidence %we see some indications 
+that the individual's age is
+more important, both statistically and practically, than work experience for
+explaining the individual's labor income in our sample. We note that when the
+individual's age (in any functional form) is used in the labor
+income equation, the rate of return to education is statistically
+significant. 
+
+Most importantly, Table \ref{tb:AllEstRes} suggests that the
+inverse Mills ratio is highly statistically significant in all specifications implying that the correction for the sample selection
+was needed. %in the labor income equation. 
+Given %Having considered 
+the economic
+interpretation of the estimated coefficients, their signs and economic as well as statistical significance, specification (5) seems most attractive %likely to be the most reliable specification 
+in light of the existing studies on
+the topic. Interestingly, the traditional Heckman specification produces % second-step estimation 
+results that %n column (7) 
+are close to those reported in column (5).
+
+
+%------------------------------------------------------------------------------
+\section{Conclusion}	\label{sec:conclude}
+%------------------------------------------------------------------------------
+We have proposed an extension to the traditional Heckman sample selection model by incorporating it into a model selection framework with many controls. A double application of the lasso to each part of the model permits valid inference on the parts of the model that is of interest to empirical economists. We detail the steps involved in a consistent estimation with valid standard errors and we provide a new Stata command to implement it. We also investigate aspects of the Neyman orthogonality that relate it to the concept of redundancy in the GMM estimation. 
+
+Lasso and double selection in linear models have been recently subject of scrutiny in cases when lasso under-selects controls in finite samples even under a sparsity scenario and the double selection estimators have severe omitted variable biases \cite[see, e.g.,][]{wuthrich/zhu:21, lahiri:21}. This happens when the signal from the variables lasso works on is weak and they do not get selected by either of the two selection procedures. The solution proposed by \cite{wuthrich/zhu:21} is to resort in such cases to the regular OLS estimation using a high-dimensional variance matrix computations which is computationally difficult and works only when $p<n$.  
+
+We show how large the errors committed by the naive application of lasso can be and we provide an application to a classic problem in labor economics where using our method leads to a few new insights. We provide a user-friendly and versatile Stata command, which can help empirical economists use the proposed methodology. The command as well as the simulation and application data are made available on the authors' web pages.
+
+Finally we note that the results of this paper can be extended to other consistent methods of model selection beyond lasso, such as the Dantzig Selector proposed by \cite{candes/tao:07}.
+\newpage
+
+%------------------------------------------------------------------------------
+%\section{Tables}
+%------------------------------------------------------------------------------
+
+\begin{table}[H]
+\begin{center}
+{\footnotesize
+\caption{\textbf{Simulation results for $\beta_1$}}
+\label{tab:x1}
+\input{tables/table_x1.tex}
+}
+\end{center}
+\end{table}
+
+\begin{table}[H]
+\begin{center}
+{\footnotesize
+\caption{\textbf{Simulation results for $\beta_2$}}
+\label{tab:x2}
+\input{tables/table_x2.tex}
+}
+\end{center}
+\end{table}
+
+\begin{table}[H]
+\begin{center}
+{\footnotesize
+\caption{\textbf{Simulation results for $\gamma$}}
+\label{tab:gamma}
+\input{tables/table_lambda.tex}
+}
+\end{center}
+\end{table}
+
+\newpage
+\input{tables/table_vars.tex}
+
+\newpage
+\input{tables/table_sample_charc.tex}
+
+\input{tables/probit_main}
+% table for probit step
+%\newpage
+%\input{tables/probit_eq.tex}
+\begin{comment}
+
+{\scriptsize Notes: The dependent variable is the indicator for whether the
+individual is in labor force or not.  Column (1) reports a subset of the
+first-step estimation results when work experience (in a quadratic form) enters
+the set of the first-step explanatory variables but only work experience in a
+linear form is present in the labor income equation and thus required to be
+among the ``selected" controls in the first step. Column (2) is identical to
+column (1) except that work experience in a quadratic form is required to be
+among the ``selected" controls in the probit step. Columns (3) and (4) are
+similar to columns (1) and (2) except that they produce a subset of the
+first-step estimation results when the individual's age (not work experience) in
+a linear and quadratic forms, respectively, is a part of the set of the
+first-step explanatory variables. Columns (5) and (6) follow the logic of the
+previous two pairs of columns but report a subset of the first-step estimation
+results when both age and work experience enter the set of the explanatory
+variables in the first step of our analysis.  Finally, column (7) reports a
+subset of the estimated coefficients from the first step probit used in the
+traditional two-step Heckman sample selection procedure where the total number
+of the explanatory variables from probit specification (6) is used as a set of
+the explanatory variables. The estimated parameters and their standard errors
+for a full set of state dummy variables as well as a full set of urban-rural
+dummy variables are omitted to preserve space. The remaining set of the
+explanatory variables in all the probit specifications additionally contains a
+set of the control variables and potential exclusion restrictions, which  are
+provided in Table \ref{tb:BaselineXs}.  \textbf{Check the last two rows of the
+table.} }
+
+
+
+
+%\newpage
+%\input{tables/main_eq.tex}
+
+
+{\scriptsize Notes: The dependent variable is the log of total annual labor
+income. Columns (1)-(6) are based on the probit specifications (1)-(6) from
+Table \ref{tb:ProbitEstRes}, respectively. Column (7) reports the estimated
+coefficients from the second step of the traditional two-step Heckman sample
+selection procedure where the total number of the explanatory variables from
+probit specification (6) in Table \ref{tb:ProbitEstRes} is used as a set of the
+explanatory variables in the traditional first step. The estimated parameters
+and their standard errors for a full set of state dummy variables as well as a
+full set of urban-rural dummy variables are omitted from all the columns to
+preserve space. The last row reports the total number of the explanatory
+variables used in the second step (including the constant term and $\lambda$).}
+
+\end{comment}
+
+
+
+
+
+%------------------------------------------------------------------------------
+%	Appendix
+%------------------------------------------------------------------------------
+\clearpage
+\section*{Appendix}
+\appendix
+%------------------------------------------------------------------------------
+%	vector version of double selection linear Lasso
+%------------------------------------------------------------------------------
+\section{Neyman orthogonal estimation for  vectors}\label{sec:dsvec}
+%Algorithm \ref{algo:dsregress} is based on a extension of \cite{belloni:14}.
+%Here is the justification.
+
+Consider an extension of the partial linear framework of \cite{belloni:14}:
+\begin{align*}
+	Y &= D' \theta_0 + g_0(X) + U &E(U|D, X) = 0\\ 
+	D_1 &= m_{0,1}(X) + V_1	& E(V_1 |X) = 0\\
+	\vdots			\nonumber \\
+	D_{k} &= m_{0,k}(X) + V_{k} & E(V_k |X) = 0
+\end{align*}
+where $D$ and  $\theta$ are $k \times 1$-vectors, rather then scalars. The functions $g_0(X)$ and $m_{0, j}(X)$ are unknown but we can use approximately sparse linear models to approximate these functions so
+that the approximation errors is small enough. We know that if $\theta$ is a scalar, we can apply the double selection lasso to
+achieve valid inference for $\theta$. Here, we will show that the same arguments can be applied when when $\theta$ is a low-dimensional
+vector.
+
+We follow \cite{cherno/etal:18} and %to justify that double-selection
+%lasso methods can provide valid inference for $\theta$ when it is a vector.
+%Here is the roadmap.
+show that
+\begin{enumerate}
+\item the moment condition implied by the Robinson-style
+``partialling-out'' is Neyman orthogonal.
+\item  the application of Theorem 3.1 of \cite{cherno/etal:18} provides the asymptotic distribution (note that cross-fitting only permits to  relax sparsity
+requirement, and the ``partialling-out'' approach  still provides valid
+inference for $\theta$ even without cross-fitting).
+\item the ``partialling-out' approach is equivalent to the double
+selection lasso.
+\end{enumerate}
+
+We start with a general definition of Neyman orthogonal moments  \cite[see, e.g.,][Definition 2.1]{cherno/etal:18}. Suppose we wish to estimate a low-dimensional parameter $\theta_0$ using the moment
+conditions
+\begin{align}
+  \E \left [ \psi(W; \theta_0, \eta_0) \right ] = 0,
+\end{align}
+where $W$ contains the random variables and  $\eta_0$ is a nuisance parameter vector, which can be high-dimensional. Suppose we
+use machine learning techniques to estimate $\eta_0$. In essence,  Neyman orthogonality means that
+small mistakes in the estimation of $\eta$ will not disturb the consistent
+estimation of $\theta_0$.
+
+Formally, Neyman orthogonality depends on the concept of pathwise (Gateux)
+derivative. Let $D_r$ denote the Gateux derivative of the moment condition $\psi$ with respect to $\eta$ in direction $r$. Then, 
+\begin{align}
+  D_r [\eta - \eta_0] = \partial_r \left\{ 
+    	\E \left [  \psi(W; \theta_0, \eta_0 + (\eta - \eta_0)r)  \right ]
+  \right \}
+\end{align}
+for all $r \in [0, 1)$.  When $D_r$ is evaluated at $r=0$, we denote it as
+  $D_0[\eta - \eta_0]$.
+\begin{defi}
+The moment condition $\E \left [ \psi(W; \theta_0, \eta_0) \right ] = 0$ is Neyman orthogonal if 
+\begin{align*}
+  D_0[\eta - \eta_0] = 0.
+\end{align*}
+\end{defi}
+
+
+%\subsection{On the double Lasso when $\theta$ is a vector}
+
+%\subsubsection{Step 1: Neyman orthogonal scores for ``partialing-out'' approach}
+Now we show Neyman orthogonality of the ``partialing-out'' approach. 
+For notational simplicity, we group the equations for $D_j \quad (j=1,
+\ldots, k)$. 
+\begin{align}
+	Y &= D' \theta_0 + g_0(X) + U, & E(U |D, X) = 0, \label{eq:yeq} \\ 
+	D &= m_{0}(X) + V, & E(V|X) = 0, \label{eq:deq}
+\end{align}
+where $D = (D_1, D_2, \ldots, D_{k})'$, 
+$m_0(X) = (m_{0, 1}(X), m_{0, 2}(X), \ldots, m_{0, k}(X))'$, and $V = (V_1,
+V_2, \ldots, V_{k})'$. 
+Plugging  Eq.~\ref{eq:deq} into \ref{eq:yeq}, we obtain the reduced form for
+$Y$:
+\begin{align}
+	Y &= l_0(X) + B, & E(B | X) = 0,
+\end{align}
+where $l_0(X) = m_0(X)\theta_0 + g_0(X)$ and $B = U + V'\theta_0$.
+Now we can show that the following Robinson-style ``partialling-out'' moment
+condition is Neyman orthogonal.
+
+\begin{prop} \label{prop:psi}
+The moment condition using the function \begin{align} 
+\psi\left[ W; \theta, \eta \right] = (Y - l(X) - (D - m(X))'\theta)(D - m(X))
+\label{eq:psi}
+\end{align}
+where $W = (Y, X, D)$ and $\eta = (l, m)$,  is Neyman orthogonal.
+\end{prop}
+
+\begin{proof}
+First we show that 
+ $\E\left[ \psi \left( W; \theta_0, \eta_0 \right) \right] =
+0$:
+\begin{align*}
+\E\left[ \psi \left( W; \theta_0, \eta_0 \right) \right] &=
+\E \left[ 
+(Y - l_0(X) - (D - m_0(X))'\theta_0)(D - m_0(X))
+\right] \\
+&= \E\left[ (B - V'\theta_0)V \right]\\
+& = \E\left[ (U + V'\theta_0 - V'\theta_0)V \right] \\
+& = \E\left[ UV \right] \\
+& = 0,
+\end{align*}
+where the last equality holds because $\E( U |D, X) = 0$
+
+Next, we prove that $D_0\left[ \eta - \eta_0 \right] = 0$. First note that
+\begin{align*}
+ \E& \left [  \psi(W; \theta_0, \eta_0 + (\eta - \eta_0)r)  \right ] \\
+ &= \E\left[ 
+ (Y - l_0(X) - r (l(X) - l_0(X)) - (D - m_0(X)-r(m(X)-m_0(X)))'\theta)
+ (D - m_0(X) - r(m(X) - m_0(X))
+ \right]
+\end{align*}
+Thus, we can compute $D_r[\eta - \eta_0]$ as follows: 
+\begin{align*}
+D_r&[\eta - \eta_0] =  
+- \E\left[
+(Y - l_0(X) - r (l(X) - l_0(X)) - (D - m_0(X)-r(m(X)-m_0(X)))'\theta_0)
+(m(X) - m_0(X))
+\right]  \\
+&-
+\E\left[
+ (l(X) - l_0(X)) - (m(X)-m_0(X))'\theta_0)
+ (D - m_0(X) - r(m(X) - m_0(X))
+\right]
+\end{align*}
+Now, set $r=0$ and evaluate $D_0[\eta - \eta_0]$:
+\begin{align*}
+D_0[\eta - \eta_0]
+&= -\E \left[
+\left( Y - l_0(X) - (D - m_0(X))'\theta_0 \right)
+\left(
+m(X) - m_0(X)
+\right)
+\right] \\
+&- \E \left[
+\left(
+(l(X) - l_0(X)) - (m(X)-m_0(X))'\theta_0)
+\right)
+\left(
+D - m_0(X)
+\right)
+\right] \\
+& = -\E\left[ U (m(X) - m_0(X) \right]
+- \E\left[ 
+ (l(X) - l_0(X)) - (m(X)-m_0(X))'\theta_0)
+ V
+\right] \\
+&= 0,
+\end{align*}
+where the last equality holds because of the law of iterated expectation.
+
+Therefore, the moment condition is Neyman orthogonal.
+\end{proof}
+
+%\subsubsection{Step 2: asymptotic distribution of $\widehat{\theta}$}
+
+Next, we provide the asymptotic distribution.  Let $\widehat{\theta}$ be a solution to $\frac{1}{n}\sum \psi_i(W; \theta, \eta) =0$,
+given $\eta$. By Theorem 3.1 of \cite{cherno/etal:18},  $\widehat{\theta}$ is
+a consistent estimator of $\theta_0$, and it is asymptotically normal with the rate of $\sqrt{N}$. Its variance is 
+\begin{align}
+\Sigma = J_0^{-1} \E (\psi(W; \theta_0, \eta_0) \psi(W; \theta_0, \eta_0)')
+(J_0^{-1})', \label{eq:var}
+\end{align}
+where $J_0 = \E[ \partial \psi / \partial \theta |_{\theta = \theta_0}]$. We can simplify this expression to arrive at the following formula:
+\begin{align}
+\Sigma = (\E (VV') )^{-1} \E(VV'U^2) (\E(VV'))^{-1}.\label{eq:simple}
+\end{align}
+
+Eq.~(\ref{eq:simple}) leads to the following straightforward  estimator of $\Sigma$:
+\begin{align}
+\widehat{\Sigma} = 
+\left(\frac{1}{n} \sum_i \widehat{V_i}\widehat{V_i}'\right)^{-1}
+\left(
+\frac{1}{n} \sum_i \widehat{V_i}\widehat{V_i}'\widehat{U_i}^2
+\right)
+\left(\frac{1}{n} \sum_i \widehat{V_i}\widehat{V_i}'\right)^{-1},
+\label{eq:varhat}
+\end{align}
+where $\widehat{V_i}$ and $\widehat{U_i}$ are the residuals from Eqs.~(\ref{eq:yeq}) and (\ref{eq:deq}), respectively. 
+Apparently, the variance estimator is the classic
+heteroskedasticity-consistent estimator.
+
+The last step is to show that double selection lasso is equivalent to the ``partialling-out''. We start with the equation 
+\begin{align*}
+	y = D'\theta_0 + g_0(X) + U.
+\end{align*}
+If we partial out $X$ from both $Y$ and $D$, the equation becomes
+\begin{align}
+y - l_0(X) = (D - m_0(X))'\theta_0 + U
+\label{eq:ds}
+\end{align}
+It is easy to see that the solution for $\theta$ in Eq.~\ref{eq:ds} comes from the
+Neyman orthogonal moment condition using the moment function in Eq.~\ref{eq:psi}. 
+
+Therefore, double selection is equivalent to the Robinson-style
+``partialling-out'' approach.
+
+\section{Sketch of Proofs of Propositions \ref{prop:heckit} and \ref{prop:var} }\label{sec:proofs}
+
+\textbf{Proposition \ref{prop:heckit}.} The proof is similar to that of Theorem 1 of \cite{bellonichernozhukovhansen2014} and essentially consists in verifying that the assumptions of that theorem are fulfilled given what we assumed in Assumptions 
+ \ref{assump:heckman}-\ref{assump:r&n}. 
+
+\textbf{Proof of Proposition \ref{prop:var}.} The construction of a variance estimator outlined in the paragraphs immediately preceding the proposition is similar to the standard correction for the first-step estimation error in the \citet{Heckman1979} procedure \cite[see, e.g.,][Section 16.10.2]{cameron/trivedi:05}. An important difference is that now we include the effect of the controls selected in the last step of the double selection lasso estimation when computing the residuals. 
+
+
+%------------------------------------------------------------------------------
+%\newpage
+\section{{\tt dsheckman}: Stata command for DS-HECK estimator}
+\label{sec:dsheckman_syntax}
+%------------------------------------------------------------------------------
+
+The syntax of {\tt dsheckman} is 
+
+{\tt dsheckman} {\it depvar} {\it indepvars} [{\tt if}] [{\tt in}], 
+	{\tt \underline{sel}ection({\it depvar\_s} = {\it indepvars\_s})}
+	[selvars({\it varlist})]
+
+\noindent
+where 
+\begin{itemize}
+\item {\it depvar} specifies the dependent variable in the main equation, which
+corresponds to $y_1$ in Eq.~(\ref{eq:y1}).
+
+\item {\it indepvars} specifies the independent variables in the main equation,
+which correspond to $\mathbf{x_1}$ in Eq.~(\ref{eq:y1}).
+
+\item {\it depvar\_s} specifies the dependent variable in the selection
+equation, which corresponds to $y_2$ in Eq.~(\ref{eq:y2}).
+
+\item {\it indepvars\_s} specifies the independent variables in the selection
+equation, which correspond to $\mathbf{x}$ and $\mathbf{z}$ in
+Eq.~(\ref{eq:y2}).
+
+\item {\tt selvars()} specifies $\mathbf{x}$ in Eq.~(\ref{eq:y2}). If this
+option is not used, $\mathbf{x}$ is constructed in two steps: (a) run the
+lasso probit of {\it devpar\_s} on {\it indepvars\_s} using the plugin penalty; denote the selected variables by $\mathbf{x_2}$; (b) construct $\mathbf{x}$ as the
+union of $\mathbf{x_1}$ and $\mathbf{x_2}$.
+
+\end{itemize}
+
+%------------------------------------------------------------------------------
+%	reference
+%------------------------------------------------------------------------------
+\newpage
+\bibliographystyle{ecta}
+\bibliography{dantzig}
+
+
+
+
+
+\end{document}

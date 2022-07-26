@@ -1,0 +1,368 @@
+\begin{tabular}{llllllllllll}
+\cline{1-12}
+\multicolumn{1}{c}{} &
+  \multicolumn{6}{|c}{$ p = 1000 $} &
+  \multicolumn{5}{c}{$ p = 2100 $} \\
+\multicolumn{1}{c}{} &
+  \multicolumn{1}{|r}{True} &
+  \multicolumn{1}{r}{MSE} &
+  \multicolumn{1}{r}{Mean} &
+  \multicolumn{1}{r}{SD} &
+  \multicolumn{1}{r}{$\overline{SE}$} &
+  \multicolumn{1}{r}{Rej. Rate} &
+  \multicolumn{1}{r}{MSE} &
+  \multicolumn{1}{r}{Mean} &
+  \multicolumn{1}{r}{SD} &
+  \multicolumn{1}{r}{$\overline{SE}$} &
+  \multicolumn{1}{r}{Rej. Rate} \\
+\cline{1-12}
+\multicolumn{1}{l}{$\gamma = 0.4$} &
+  \multicolumn{1}{|r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} \\
+\multicolumn{1}{l}{\hspace{1em}Oracle} &
+  \multicolumn{1}{|r}{1} &
+  \multicolumn{1}{r}{0.0014} &
+  \multicolumn{1}{r}{0.9984} &
+  \multicolumn{1}{r}{0.0369} &
+  \multicolumn{1}{r}{0.0374} &
+  \multicolumn{1}{r}{0.0450} &
+  \multicolumn{1}{r}{0.0013} &
+  \multicolumn{1}{r}{0.9985} &
+  \multicolumn{1}{r}{0.0362} &
+  \multicolumn{1}{r}{0.0374} &
+  \multicolumn{1}{r}{0.0510} \\
+\multicolumn{1}{l}{\hspace{1em}DS} &
+  \multicolumn{1}{|r}{1} &
+  \multicolumn{1}{r}{0.0025} &
+  \multicolumn{1}{r}{0.9977} &
+  \multicolumn{1}{r}{0.0501} &
+  \multicolumn{1}{r}{0.0484} &
+  \multicolumn{1}{r}{0.0540} &
+  \multicolumn{1}{r}{0.0022} &
+  \multicolumn{1}{r}{0.9991} &
+  \multicolumn{1}{r}{0.0464} &
+  \multicolumn{1}{r}{0.0486} &
+  \multicolumn{1}{r}{0.0380} \\
+\multicolumn{1}{l}{\hspace{1em}Naive} &
+  \multicolumn{1}{|r}{1} &
+  \multicolumn{1}{r}{0.0049} &
+  \multicolumn{1}{r}{0.9424} &
+  \multicolumn{1}{r}{0.0395} &
+  \multicolumn{1}{r}{0.0350} &
+  \multicolumn{1}{r}{0.4200} &
+  \multicolumn{1}{r}{0.0052} &
+  \multicolumn{1}{r}{0.9379} &
+  \multicolumn{1}{r}{0.0360} &
+  \multicolumn{1}{r}{0.0349} &
+  \multicolumn{1}{r}{0.4310} \\
+\multicolumn{1}{l}{\hspace{1em}OLS} &
+  \multicolumn{1}{|r}{1} &
+  \multicolumn{1}{r}{0.0046} &
+  \multicolumn{1}{r}{0.9422} &
+  \multicolumn{1}{r}{0.0350} &
+  \multicolumn{1}{r}{0.0350} &
+  \multicolumn{1}{r}{0.3890} &
+  \multicolumn{1}{r}{0.0045} &
+  \multicolumn{1}{r}{0.9421} &
+  \multicolumn{1}{r}{0.0339} &
+  \multicolumn{1}{r}{0.0350} &
+  \multicolumn{1}{r}{0.3610} \\
+\multicolumn{1}{l}{} &
+  \multicolumn{1}{|r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} \\
+\multicolumn{1}{l}{$\gamma = 0.5$} &
+  \multicolumn{1}{|r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} \\
+\multicolumn{1}{l}{\hspace{1em}Oracle} &
+  \multicolumn{1}{|r}{1} &
+  \multicolumn{1}{r}{0.0014} &
+  \multicolumn{1}{r}{0.9993} &
+  \multicolumn{1}{r}{0.0380} &
+  \multicolumn{1}{r}{0.0387} &
+  \multicolumn{1}{r}{0.0430} &
+  \multicolumn{1}{r}{0.0015} &
+  \multicolumn{1}{r}{0.9980} &
+  \multicolumn{1}{r}{0.0389} &
+  \multicolumn{1}{r}{0.0387} &
+  \multicolumn{1}{r}{0.0480} \\
+\multicolumn{1}{l}{\hspace{1em}DS} &
+  \multicolumn{1}{|r}{1} &
+  \multicolumn{1}{r}{0.0025} &
+  \multicolumn{1}{r}{1.0000} &
+  \multicolumn{1}{r}{0.0504} &
+  \multicolumn{1}{r}{0.0502} &
+  \multicolumn{1}{r}{0.0570} &
+  \multicolumn{1}{r}{0.0027} &
+  \multicolumn{1}{r}{0.9979} &
+  \multicolumn{1}{r}{0.0518} &
+  \multicolumn{1}{r}{0.0502} &
+  \multicolumn{1}{r}{0.0600} \\
+\multicolumn{1}{l}{\hspace{1em}Naive} &
+  \multicolumn{1}{|r}{1} &
+  \multicolumn{1}{r}{0.0067} &
+  \multicolumn{1}{r}{0.9289} &
+  \multicolumn{1}{r}{0.0409} &
+  \multicolumn{1}{r}{0.0362} &
+  \multicolumn{1}{r}{0.5240} &
+  \multicolumn{1}{r}{0.0075} &
+  \multicolumn{1}{r}{0.9229} &
+  \multicolumn{1}{r}{0.0389} &
+  \multicolumn{1}{r}{0.0361} &
+  \multicolumn{1}{r}{0.5840} \\
+\multicolumn{1}{l}{\hspace{1em}OLS} &
+  \multicolumn{1}{|r}{1} &
+  \multicolumn{1}{r}{0.0063} &
+  \multicolumn{1}{r}{0.9291} &
+  \multicolumn{1}{r}{0.0353} &
+  \multicolumn{1}{r}{0.0362} &
+  \multicolumn{1}{r}{0.4930} &
+  \multicolumn{1}{r}{0.0066} &
+  \multicolumn{1}{r}{0.9277} &
+  \multicolumn{1}{r}{0.0373} &
+  \multicolumn{1}{r}{0.0363} &
+  \multicolumn{1}{r}{0.5190} \\
+\multicolumn{1}{l}{} &
+  \multicolumn{1}{|r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} \\
+\multicolumn{1}{l}{$\gamma = 0.6$} &
+  \multicolumn{1}{|r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} \\
+\multicolumn{1}{l}{\hspace{1em}Oracle} &
+  \multicolumn{1}{|r}{1} &
+  \multicolumn{1}{r}{0.0016} &
+  \multicolumn{1}{r}{0.9995} &
+  \multicolumn{1}{r}{0.0395} &
+  \multicolumn{1}{r}{0.0401} &
+  \multicolumn{1}{r}{0.0440} &
+  \multicolumn{1}{r}{0.0015} &
+  \multicolumn{1}{r}{0.9984} &
+  \multicolumn{1}{r}{0.0393} &
+  \multicolumn{1}{r}{0.0400} &
+  \multicolumn{1}{r}{0.0520} \\
+\multicolumn{1}{l}{\hspace{1em}DS} &
+  \multicolumn{1}{|r}{1} &
+  \multicolumn{1}{r}{0.0025} &
+  \multicolumn{1}{r}{1.0001} &
+  \multicolumn{1}{r}{0.0504} &
+  \multicolumn{1}{r}{0.0519} &
+  \multicolumn{1}{r}{0.0460} &
+  \multicolumn{1}{r}{0.0027} &
+  \multicolumn{1}{r}{0.9981} &
+  \multicolumn{1}{r}{0.0522} &
+  \multicolumn{1}{r}{0.0521} &
+  \multicolumn{1}{r}{0.0500} \\
+\multicolumn{1}{l}{\hspace{1em}Naive} &
+  \multicolumn{1}{|r}{1} &
+  \multicolumn{1}{r}{0.0089} &
+  \multicolumn{1}{r}{0.9183} &
+  \multicolumn{1}{r}{0.0475} &
+  \multicolumn{1}{r}{0.0376} &
+  \multicolumn{1}{r}{0.6110} &
+  \multicolumn{1}{r}{0.0101} &
+  \multicolumn{1}{r}{0.9081} &
+  \multicolumn{1}{r}{0.0413} &
+  \multicolumn{1}{r}{0.0373} &
+  \multicolumn{1}{r}{0.6880} \\
+\multicolumn{1}{l}{\hspace{1em}OLS} &
+  \multicolumn{1}{|r}{1} &
+  \multicolumn{1}{r}{0.0087} &
+  \multicolumn{1}{r}{0.9148} &
+  \multicolumn{1}{r}{0.0374} &
+  \multicolumn{1}{r}{0.0376} &
+  \multicolumn{1}{r}{0.6190} &
+  \multicolumn{1}{r}{0.0087} &
+  \multicolumn{1}{r}{0.9144} &
+  \multicolumn{1}{r}{0.0370} &
+  \multicolumn{1}{r}{0.0376} &
+  \multicolumn{1}{r}{0.6150} \\
+\multicolumn{1}{l}{} &
+  \multicolumn{1}{|r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} \\
+\multicolumn{1}{l}{$\gamma = 0.7$} &
+  \multicolumn{1}{|r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} \\
+\multicolumn{1}{l}{\hspace{1em}Oracle} &
+  \multicolumn{1}{|r}{1} &
+  \multicolumn{1}{r}{0.0019} &
+  \multicolumn{1}{r}{0.9969} &
+  \multicolumn{1}{r}{0.0435} &
+  \multicolumn{1}{r}{0.0416} &
+  \multicolumn{1}{r}{0.0690} &
+  \multicolumn{1}{r}{0.0018} &
+  \multicolumn{1}{r}{1.0001} &
+  \multicolumn{1}{r}{0.0419} &
+  \multicolumn{1}{r}{0.0419} &
+  \multicolumn{1}{r}{0.0510} \\
+\multicolumn{1}{l}{\hspace{1em}DS} &
+  \multicolumn{1}{|r}{1} &
+  \multicolumn{1}{r}{0.0032} &
+  \multicolumn{1}{r}{0.9956} &
+  \multicolumn{1}{r}{0.0564} &
+  \multicolumn{1}{r}{0.0539} &
+  \multicolumn{1}{r}{0.0570} &
+  \multicolumn{1}{r}{0.0028} &
+  \multicolumn{1}{r}{1.0008} &
+  \multicolumn{1}{r}{0.0525} &
+  \multicolumn{1}{r}{0.0543} &
+  \multicolumn{1}{r}{0.0410} \\
+\multicolumn{1}{l}{\hspace{1em}Naive} &
+  \multicolumn{1}{|r}{1} &
+  \multicolumn{1}{r}{0.0126} &
+  \multicolumn{1}{r}{0.8999} &
+  \multicolumn{1}{r}{0.0508} &
+  \multicolumn{1}{r}{0.0389} &
+  \multicolumn{1}{r}{0.7400} &
+  \multicolumn{1}{r}{0.0135} &
+  \multicolumn{1}{r}{0.8930} &
+  \multicolumn{1}{r}{0.0455} &
+  \multicolumn{1}{r}{0.0390} &
+  \multicolumn{1}{r}{0.7640} \\
+\multicolumn{1}{l}{\hspace{1em}OLS} &
+  \multicolumn{1}{|r}{1} &
+  \multicolumn{1}{r}{0.0118} &
+  \multicolumn{1}{r}{0.8993} &
+  \multicolumn{1}{r}{0.0401} &
+  \multicolumn{1}{r}{0.0392} &
+  \multicolumn{1}{r}{0.7170} &
+  \multicolumn{1}{r}{0.0115} &
+  \multicolumn{1}{r}{0.9005} &
+  \multicolumn{1}{r}{0.0397} &
+  \multicolumn{1}{r}{0.0393} &
+  \multicolumn{1}{r}{0.7110} \\
+\multicolumn{1}{l}{} &
+  \multicolumn{1}{|r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} \\
+\multicolumn{1}{l}{$\gamma = 0.8$} &
+  \multicolumn{1}{|r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} &
+  \multicolumn{1}{r}{} \\
+\multicolumn{1}{l}{\hspace{1em}Oracle} &
+  \multicolumn{1}{|r}{1} &
+  \multicolumn{1}{r}{0.0019} &
+  \multicolumn{1}{r}{0.9962} &
+  \multicolumn{1}{r}{0.0437} &
+  \multicolumn{1}{r}{0.0434} &
+  \multicolumn{1}{r}{0.0470} &
+  \multicolumn{1}{r}{0.0019} &
+  \multicolumn{1}{r}{0.9968} &
+  \multicolumn{1}{r}{0.0438} &
+  \multicolumn{1}{r}{0.0434} &
+  \multicolumn{1}{r}{0.0510} \\
+\multicolumn{1}{l}{\hspace{1em}DS} &
+  \multicolumn{1}{|r}{1} &
+  \multicolumn{1}{r}{0.0031} &
+  \multicolumn{1}{r}{0.9965} &
+  \multicolumn{1}{r}{0.0560} &
+  \multicolumn{1}{r}{0.0558} &
+  \multicolumn{1}{r}{0.0470} &
+  \multicolumn{1}{r}{0.0034} &
+  \multicolumn{1}{r}{0.9966} &
+  \multicolumn{1}{r}{0.0582} &
+  \multicolumn{1}{r}{0.0562} &
+  \multicolumn{1}{r}{0.0530} \\
+\multicolumn{1}{l}{\hspace{1em}Naive} &
+  \multicolumn{1}{|r}{1} &
+  \multicolumn{1}{r}{0.0165} &
+  \multicolumn{1}{r}{0.8835} &
+  \multicolumn{1}{r}{0.0544} &
+  \multicolumn{1}{r}{0.0406} &
+  \multicolumn{1}{r}{0.8020} &
+  \multicolumn{1}{r}{0.0173} &
+  \multicolumn{1}{r}{0.8777} &
+  \multicolumn{1}{r}{0.0484} &
+  \multicolumn{1}{r}{0.0404} &
+  \multicolumn{1}{r}{0.8360} \\
+\multicolumn{1}{l}{\hspace{1em}OLS} &
+  \multicolumn{1}{|r}{1} &
+  \multicolumn{1}{r}{0.0152} &
+  \multicolumn{1}{r}{0.8838} &
+  \multicolumn{1}{r}{0.0408} &
+  \multicolumn{1}{r}{0.0409} &
+  \multicolumn{1}{r}{0.8150} &
+  \multicolumn{1}{r}{0.0148} &
+  \multicolumn{1}{r}{0.8858} &
+  \multicolumn{1}{r}{0.0414} &
+  \multicolumn{1}{r}{0.0408} &
+  \multicolumn{1}{r}{0.7870} \\
+\cline{1-12}
+\end{tabular}

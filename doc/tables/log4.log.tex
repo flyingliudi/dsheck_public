@@ -1,0 +1,38 @@
+. dsheckman lnwage educ exper c.exper\#c.exper age c.age\#c.age i.govern  i.race 
+> ///
+>         if married_head == 1, sel(inlf = `controls')                    
+{\smallskip}
+Double-selection Heckman              Number of obs               =      4,086
+                                      Selected                    =      2,521
+                                      Nonselected                 =      1,565
+                                      Number of controls          =         92
+                                      Number of selected controls =         38
+{\smallskip}
+\HLI{13}{\TOPT}\HLI{64}
+             {\VBAR}      Coef.   Std. Err.      z    P>|z|     [95\% Conf. Interval]
+\HLI{13}{\PLUS}\HLI{64}
+        educ {\VBAR}   .1252089   .0111604    11.22   0.000     .1033349    .1470829
+       exper {\VBAR}   .0410847   .0068593     5.99   0.000     .0276408    .0545286
+             {\VBAR}
+     c.exper\#{\VBAR}
+     c.exper {\VBAR}  -.0005526   .0003633    -1.52   0.128    -.0012647    .0001594
+             {\VBAR}
+         age {\VBAR}   .0637184   .0266334     2.39   0.017     .0115179     .115919
+             {\VBAR}
+ c.age\#c.age {\VBAR}  -.0009851   .0003594    -2.74   0.006    -.0016896   -.0002806
+             {\VBAR}
+    1.govern {\VBAR}  -.0196135   .0253868    -0.77   0.440    -.0693707    .0301438
+             {\VBAR}
+        race {\VBAR}
+Black, Af..  {\VBAR}  -.0177732   .0313904    -0.57   0.571    -.0792973    .0437508
+American ..  {\VBAR}  -.9221571   .1928185    -4.78   0.000    -1.300074   -.5442398
+      Asian  {\VBAR}  -.1843727   .3269772    -0.56   0.573    -.8252363    .4564909
+Native Ha..  {\VBAR}          0  (omitted)
+      Other  {\VBAR}   .2042594   .1074979     1.90   0.057    -.0064327    .4149515
+             {\VBAR}
+      lambda {\VBAR}  -.6469446   .3129544    -2.07   0.039    -1.260324   -.0335652
+       _cons {\VBAR}   7.139789   .4548134    15.70   0.000     6.248371    8.031207
+\HLI{13}{\BOTT}\HLI{64}
+{\smallskip}
+. est store model3
+{\smallskip}

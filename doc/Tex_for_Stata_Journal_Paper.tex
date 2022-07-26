@@ -1,0 +1,73 @@
+
+
+Using PSID in 2013, we estimate the married women's wage in the presence of
+high-dimensional controls and possible sample selection bias.  
+
+The selection equation is about whether women choose to work. It has many 
+potential controls, including the continuous variables and dummy variables.
+The main Equation is about married women's wages. The variables of interests
+are experience ({\tt expr}), experience squared ({\tt $exper^2$}), education
+level in years ({\tt educ}), age ({\tt age}), age squared ({\tt $age^2$}), and
+whether work for the government ({\tt govern}).
+
+We estimate four models. 
+\begin{itemize}
+\item Model 1 has many controls in the selection-equation.  
+
+\item Model 2 is basically the same as Model 1, but it includes some extra
+controls in the main Equation. These controls are current living state ({\tt
+state}), race ({\tt race}), and occupation categories ({\tt occ}). 
+
+\item Model 3 is basically the same as Model 1, but we add race ({\tt race}) as
+variable of interest in the main Equation.
+
+\item Model 4 is basically the same as Model 3, but we add extra controls in the
+main Equation. These controls are current living state and occupation
+categories.
+\end{itemize}
+
+
+\subsection{Estimation results}
+First, we define the potential controls in the selection equation.
+\begin{stlog}
+\input{tables/log1.log.tex}
+\end{stlog}
+
+We estimate Model 1 using a double-selection-lasso Heckman. There are 92
+controls and Lasso selects 24 of them.  The estimate for $\lambda$ is
+significant at $5\%$ level.  It indicates sample selection bias.
+
+\begin{stlog}
+\input{tables/log2.log.tex}
+\end{stlog}
+
+In Model 2, we now include extra controls such as current living state, race,
+and occupation in the main Equation. There are 173 controls in this model, and
+Lasso selects 34 of them. Interestingly, the coefficient for {\tt govern}
+becomes significant at \%10 levels in this model. The other coefficients do not
+change much compared with Model 1.
+\begin{stlog}
+\input{tables/log3.log.tex}
+\end{stlog}
+
+In Model 3, we add race as a variable of interest in the main Equation, and
+everything else is the same as Model 1.
+\begin{stlog}
+\input{tables/log4.log.tex}
+\end{stlog}
+
+In Model 4, we add extra controls, such as the living state and occupation
+category, in the main Equation. Everything else is the same as Model 3.
+\begin{stlog}
+\input{tables/log5.log.tex}
+\end{stlog}
+
+
+Here are the estimation results of all models.
+\begin{stlog}
+\input{tables/log6.log.tex}
+\end{stlog}
+
+Finally, if we try to estimate Model 1 using traditional Heckman, the probit for
+the selection Equation does not even converge because of high-dimensional
+controls. 
