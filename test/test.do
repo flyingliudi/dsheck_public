@@ -19,8 +19,5 @@ qui dgp2_heckman, nobs(`nobs') px(`px') pz(`pz') gamma(`gamma') ///
 	beta(`beta') bsmall(`bsmall') bbig(`bbig')
 
 
-dsheckman y1 x*, sel(y2 = x* z*)	///
-	est_probit(probit1) 		///
-	esample_probit(esample_probit)	///
-	esample_main(esample_main)	
+dsheckman y1 x*, sel(y2 = x* z*)	
 
