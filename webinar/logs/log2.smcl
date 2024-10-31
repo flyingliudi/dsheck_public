@@ -1,0 +1,36 @@
+{com}. dsheckman lnwage educ_level exper, selection(inlf = `vars_sel')         
+
+{txt}step 1: lasso probit to select vars
+step 2: dsprobit of y2 on selected zvars
+
+Double selection probit{col 39}Number of obs{col 67}={col 69}{res}     1,989
+{col 39}{txt}Number of controls{col 67}={col 69}{res}        89
+{col 39}{txt}Number of selected controls{col 67}={col 69}{res}        10
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |}{col 26}    Robust
+{col 1}        inlf{col 14}{c |} Coefficient{col 26}  std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 2}educ_level {c |}{col 14}{res}{space 2}  .071556{col 26}{space 2} .0228702{col 37}{space 1}    3.13{col 46}{space 3}0.002{col 54}{space 4} .0267313{col 67}{space 3} .1163807
+{txt}{space 6}exper2 {c |}{col 14}{res}{space 2}-.0011333{col 26}{space 2} .0003511{col 37}{space 1}   -3.23{col 46}{space 3}0.001{col 54}{space 4}-.0018214{col 67}{space 3}-.0004451
+{txt}childca~2012 {c |}{col 14}{res}{space 2} .0726106{col 26}{space 2} .0258034{col 37}{space 1}    2.81{col 46}{space 3}0.005{col 54}{space 4} .0220368{col 67}{space 3} .1231845
+{txt}{space 7}exper {c |}{col 14}{res}{space 2} .0156069{col 26}{space 2} .0119473{col 37}{space 1}    1.31{col 46}{space 3}0.191{col 54}{space 4}-.0078093{col 67}{space 3} .0390231
+{txt}{space 7}_cons {c |}{col 14}{res}{space 2}-.7051439{col 26}{space 2} .2897608{col 37}{space 1}   -2.43{col 46}{space 3}0.015{col 54}{space 4}-1.273065{col 67}{space 3}-.1372231
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+step 3: compute lambda
+step 4: dsregress y1 on xvars, lambda with controls
+{res}
+{txt}Double-selection-lasso Heckman{col 39}Number of obs{col 67}={col 69}{res}     1,989
+{col 46}{txt}Selected{col 67}={col 69}{res}     1,294
+{col 46}{txt}Nonselected{col 67}={col 69}{res}       695
+{col 39}{txt}Number of variables{col 67}={col 69}{res}        93
+{col 39}{txt}Number of selected controls{col 67}={col 69}{res}         3
+{col 39}{txt}Number of main variables{col 67}={col 69}{res}         2
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |} Coefficient{col 26}  Std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 2}educ_level {c |}{col 14}{res}{space 2} .0544304{col 26}{space 2} .0382198{col 37}{space 1}    1.42{col 46}{space 3}0.154{col 54}{space 4}-.0204791{col 67}{space 3} .1293399
+{txt}{space 7}exper {c |}{col 14}{res}{space 2} .0320553{col 26}{space 2} .0079836{col 37}{space 1}    4.02{col 46}{space 3}0.000{col 54}{space 4} .0164076{col 67}{space 3} .0477029
+{txt}{space 6}lambda {c |}{col 14}{res}{space 2} -1.93624{col 26}{space 2} .4908842{col 37}{space 1}   -3.94{col 46}{space 3}0.000{col 54}{space 4}-2.898355{col 67}{space 3}-.9741244
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{p 0 6 2}Note: in the main equation, there are {res:2} variables; in the selection equation, {res:3} among {res:93} variables are used to predict inverse mills ratio.{p_end}

@@ -1,0 +1,6 @@
+{com}. local vars_sel exper exper2 educ_level  childcare_expen_2012            ///
+>         i.if_kidsle15 num_kids wage_husband exp_appl i.wtr_enrolled     ///
+>         i.wtr_grad_hs i.wtr_attend_college i.wtr_cert_educ              ///
+>         i.wtr_educ_usa  i.father_educ_usa i.mother_educ_usa             /// 
+>         i.rural_urban i.own_vehicle i.current_state
+{txt}

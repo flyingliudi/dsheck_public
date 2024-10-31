@@ -1,0 +1,98 @@
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+ 
+\mode<presentation>
+{
+ \usetheme{Boadilla}
+% \setbeamercovered{transparent}
+}
+\setbeamertemplate{footline}[frame number]{}
+\setbeamertemplate{navigation symbols}{}
+%\setbeamertemplate{footline}{}
+
+\usepackage{animate}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{latexsym}
+\usepackage{amsmath}
+\usepackage{verbatim}
+\usepackage{shadow}
+\usepackage{alltt}
+\usepackage{fancybox}
+\usepackage{epsfig}
+\usepackage{xcolor}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{relsize}
+\usepackage{natbib}
+\usepackage{threeparttable}
+\usepackage{graphics}
+\usepackage[english]{babel}
+\usepackage{inputenc}
+\usepackage[style=british]{csquotes}
+\usepackage{times}
+\usepackage[T1]{fontenc}
+\usepackage{mathrsfs}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{sjlatex/stata}
+\usepackage{hyperref}
+\usepackage{amsfonts}
+\usepackage{bbm}
+\usepackage{listings}
+\usepackage{pdfpages}
+\usepackage{dsfont}
+
+\newtheorem{prop}{PROPOSITION}
+\def\stlogscaled#1#2{\scalebox{#1}{
+\begin{minipage}{\hsize}
+    \begin{stlog}
+    \input{#2.log.tex}
+    \end{stlog}
+    \end{minipage}}}
+
+\def\stcmdscaled#1#2{\scalebox{#1}{
+\begin{minipage}{\hsize}
+	#2
+    \end{minipage}}}
+
+\definecolor{mygray}{gray}{0.85}
+\lstset{ %
+  upquote=true,
+  basicstyle=\footnotesize\ttfamily,
+  backgroundcolor=\color{mygray},
+}
+
+\AtBeginSection[]
+{
+\begin{frame}
+\frametitle{Table of Contents}
+\tableofcontents[currentsection]
+\end{frame}
+}
+
+\def\myred#1{{\color{red}{#1}}}
+\def\myblue#1{{\color{blue}{#1}}}
+
+\setbeamertemplate{caption}[numbered]
+
+\newcommand{\En}{ \mathbb{E}_N }
+\newcommand{\Ind}{\mathbb{I}}
+\newcommand{\E}{ \mathop{\mathbb{E}} }
+\DeclareMathOperator*{\argmin}{arg\,min}
+\newcommand{\dvar}{\mathbf{d}}
+\newcommand{\zvar}{\mathbf{z}}
+\newcommand{\uvar}{\mathbf{u}}
+\newcommand{\alphab}{\mathbf{\alpha}}
+\newcommand{\betab}{\mathbf{\beta}}
+\newcommand{\etab}{\mathbf{\eta}}
+\newcommand{\thetab}{\mathbb{\theta}}
+\newcommand{\dsheck}{{\bf DS-HECK}}
+\newcommand{\kd}{k_d}
+\newcommand{\kz}{k_z}
+\newcommand{\xvar}{\mathbf{x}}
+\newcommand{\yvar}{\mathbf{y}}
+
+

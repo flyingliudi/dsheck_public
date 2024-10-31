@@ -1,0 +1,4 @@
+pdflatex dsheck_webinar
+bibtex dsheck_webinar
+pdflatex dsheck_webinar
+pdflatex dsheck_webinar

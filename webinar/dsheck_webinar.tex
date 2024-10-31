@@ -1,0 +1,170 @@
+\documentclass[11pt]{beamer}
+\input{preamble.tex}
+
+\title{DS-HECK: Double-Lasso Estimation of Heckman Selection Model}
+\author{Di Liu \\ {\tiny Principal Econometrician} }
+\institute{\large Stata}
+\date{Nov 1, 2024}
+
+\begin{document}
+\maketitle
+
+%-----------------------------------------------------------------------------%
+\begin{frame}
+  \frametitle{High-dimensional sample selection model}
+%-----------------------------------------------------------------------------%
+\begin{align}
+  y_{1} &= \xvar_{1}'\alphab + u_{1}  \tag{main equation}\\
+  y_{2} &=\Ind(\xvar'\betab+  \myred{\zvar}' \myblue{\etab} + u_{2} \geq 0) \tag{selection
+equation}
+\end{align}
+
+\begin{itemize}
+  \item $y_1$ is the outcome of interest
+  \item $\xvar_1$ is a low dimensional vector of independent variables 
+ \item $y_2$ is a sample selection indicator
+  \item $\xvar_2 = (\xvar_1, \xvar_2)$ is a low dimensional vector
+  \item \myred{$\zvar$} is a \myred{high-dimensional} vector
+  \item \myblue{$\eta$} is a \myblue{sparse} vector
+\end{itemize}
+
+\end{frame}
+
+%-----------------------------------------------------------------------------%
+\begin{frame}
+  \frametitle{Sparse model for observed outcome}
+%-----------------------------------------------------------------------------%
+Under some assumptions, the conditional mean of the observed outcome is
+\begin{align*}
+\E(y_{1} | \xvar, \zvar, y_2 = 1) 
+&= \xvar_1'\alphab + \gamma \lambda(\xvar'\betab + \zvar'\myred{\eta}) \\
+&= \xvar_1'\alphab + \gamma \lambda(\xvar'\betab) 
++\gamma \lambda^{(1)}(q) \zvar'\myred{\eta} \\
+	&= \xvar_1'\alphab + \gamma \lambda(\xvar'\betab) 
+	+ \zvar'\myblue{\omega}
+\end{align*}
+
+Sparse $\eta \implies $ the same sparsity pattern in $\omega$.
+
+\vskip 0.5cm
+{\bf Objective}
+
+Consistently estimate $\alpha$ and $\gamma$ with high-dimensional $\zvar$ with
+sparse coefficients $\omega$.
+\begin{itemize}
+  \item $\alpha$ estimates effects of $\xvar_1$ on $y_1$.
+  \item $\gamma$ estimates the extent of sample selection bias
+  \item $\omega$ is nuisance parameter
+\end{itemize}
+\end{frame}
+
+%-----------------------------------------------------------------------------%
+\begin{frame}
+  \frametitle{DS-HECK: Two double-Lassos}
+%-----------------------------------------------------------------------------%
+Two high-dimensional models:
+\begin{align}
+\E(y_{1} | \xvar, \zvar, y_2 = 1) 
+&= \xvar_1'\myred{\alphab} + \myred{\gamma} \lambda(\xvar'\myred{\betab}) +
+\myblue{\zvar'\omega} \tag{Observed outcome} \\
+y_{2} &=\Ind(\xvar'\myred{\betab}+  \myblue{\zvar'\etab} + u_{2} \geq 0) 
+\tag{selection}
+\end{align}
+
+\vskip 1cm
+\begin{enumerate}
+  \setlength{\itemsep}{1em}
+\item If we know $\beta$, we can estimate $\alpha$ and $\gamma$ by running the
+  \myred{double-Lasso to the linear regression} in Eq. (observed outcome). 
+
+\item However, we can consistently estimate $\beta$ by running the
+  \myred{double-lasso to the Probit regression} in Eq. (selection).
+
+\item Standand errors must be adjusted because $\beta$ is estimated.
+\end{enumerate}
+\end{frame}
+
+%-----------------------------------------------------------------------------%
+\begin{frame}
+  \frametitle{ {\tt dsheckman}: Stata command for DS-HECK}
+%-----------------------------------------------------------------------------%
+{\bf Syntax}
+\begin{stsyntax}
+{\tt dsheckman}\
+\myblue{\depvar}\
+\myblue{\it indepvars}\
+\optif
+\optin\\
+\qquad \qquad \qquad
+,{\tt \underline{sel}ection(\myred{\it depvar\_s} = \myred{\it indepvars\_s})}\\
+\qquad \qquad \qquad
+\optional{\tt \myred{selvars}({\it varlist})}
+\end{stsyntax}
+
+{\bf Model}
+\begin{align}
+  \myblue{y_{1}} &= \myblue{\xvar_{1}}'\alphab + u_{1}  \tag{main equation}\\
+  \myred{y_{2}} &=\Ind(\myred{\xvar}'\betab+  \myred{\zvar}' \etab + u_{2} \geq
+  0)
+  \tag{selection equation}
+\end{align}
+
+\begin{itemize}
+  \item $\myblue{\it depvar} \equiv \myblue{y_1}$,  $\myblue{\it indepvars}
+    \equiv \myblue{\xvar_1}$
+  \item $\myred{\it depvar\_s} \equiv \myred{y_2}$, $\myred{\it
+    indepvars\_s}\equiv \myred{(\xvar, \zvar)}$
+  \item $\myred{\tt selvars()} \equiv \myred{\xvar}$ if specified. Otherwise,
+    $\xvar$ is chosen by Lasso.
+\end{itemize}
+\end{frame}
+
+%-----------------------------------------------------------------------------%
+\begin{frame}
+  \frametitle{Example: Labor participation and earnings}
+%-----------------------------------------------------------------------------%
+\begin{align}
+  \log\left({\tt income}\right)
+  &=\alpha_{0}+\alpha_{1}\cdot {\tt educ}+\alpha_{2}\cdot {\tt
+  exper}+u_1 \tag{earning}\\
+{\tt inlf}&=\mathbb{I}(\mathbf{x}'\beta+\mathbf{z}'\eta+u_2\ge 0)
+\tag{labor participation}
+\end{align}
+
+
+Step 1: Define $(\xvar, \zvar)$ in the labor participation equation
+\stlogscaled{0.88}{./logs/log1}
+\end{frame}
+
+
+%-----------------------------------------------------------------------------%
+\begin{frame}
+%-----------------------------------------------------------------------------%
+\stlogscaled{0.8}{./logs/log2}
+\end{frame}
+
+%-----------------------------------------------------------------------------%
+\begin{frame}
+  \frametitle{option {\tt selvars()}}
+%-----------------------------------------------------------------------------%
+\stlogscaled{0.7}{./logs/log3}
+\end{frame}
+
+%-----------------------------------------------------------------------------%
+\begin{frame}
+  \frametitle{Resources}
+%-----------------------------------------------------------------------------%
+
+\begin{center}
+\href{https://github.com/flyingliudi/dsheck_public}
+{\large https://github.com/flyingliudi/dsheck\_public}
+\end{center}
+
+\end{frame}
+
+
+
+
+
+
+\end{document}

@@ -1,0 +1,37 @@
+. dsheckman lnwage educ_level exper, selection(inlf = `vars_sel') ///
+>         selvars(num_kids educ_level exper)
+
+step 1: set varsofinterest in selection equation
+step 2: dsprobit of y2 on selected zvars
+
+Double selection probit               Number of obs               =      1,989
+                                      Number of controls          =         90
+                                      Number of selected controls =         12
+------------------------------------------------------------------------------
+             |               Robust
+        inlf | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+    num_kids |  -.1008661   .0440309    -2.29   0.022    -.1871651   -.0145671
+  educ_level |   .0719182   .0229172     3.14   0.002     .0270014     .116835
+       exper |   .0172596    .011989     1.44   0.150    -.0062385    .0407576
+       _cons |  -.7082983   .2901592    -2.44   0.015       -1.277   -.1395968
+------------------------------------------------------------------------------
+step 3: compute lambda
+step 4: dsregress y1 on xvars, lambda with controls
+
+Double-selection-lasso Heckman        Number of obs               =      1,989
+                                             Selected             =      1,294
+                                             Nonselected          =        695
+                                      Number of variables         =         93
+                                      Number of selected controls =          3
+                                      Number of main variables    =          2
+
+------------------------------------------------------------------------------
+             | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+  educ_level |   .0954287   .0356875     2.67   0.007     .0254825    .1653749
+       exper |   .0155112   .0163068     0.95   0.341    -.0164495    .0474719
+      lambda |  -.9183578   .7577044    -1.21   0.226    -2.403431    .5667155
+------------------------------------------------------------------------------
+Note: in the main equation, there are 2 variables; in the selection equation,
+      3 among 93 variables are used to predict inverse mills ratio.

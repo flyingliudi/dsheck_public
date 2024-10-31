@@ -1,0 +1,37 @@
+. dsheckman lnwage educ_level exper, selection(inlf = `vars_sel') ///
+>         selvars(num_kids educ_level exper)
+{\smallskip}
+step 1: set {\sltt{varsofinterest}} in selection equation
+step 2: dsprobit of y2 on selected zvars
+{\smallskip}
+Double selection probit               Number of obs               =      1,989
+                                      Number of controls          =         90
+                                      Number of selected controls =         12
+\HLI{13}{\TOPT}\HLI{64}
+             {\VBAR}               Robust
+        inlf {\VBAR} Coefficient  std. err.      z    P>|z|     [95\% conf. interval]
+\HLI{13}{\PLUS}\HLI{64}
+    num_kids {\VBAR}  -.1008661   .0440309    -2.29   0.022    -.1871651   -.0145671
+  educ_level {\VBAR}   .0719182   .0229172     3.14   0.002     .0270014     .116835
+       exper {\VBAR}   .0172596    .011989     1.44   0.150    -.0062385    .0407576
+       _cons {\VBAR}  -.7082983   .2901592    -2.44   0.015       -1.277   -.1395968
+\HLI{13}{\BOTT}\HLI{64}
+step 3: compute lambda
+step 4: dsregress y1 on xvars, lambda with controls
+{\smallskip}
+Double-selection-lasso Heckman        Number of obs               =      1,989
+                                             Selected             =      1,294
+                                             Nonselected          =        695
+                                      Number of variables         =         93
+                                      Number of selected controls =          3
+                                      Number of main variables    =          2
+{\smallskip}
+\HLI{13}{\TOPT}\HLI{64}
+             {\VBAR} Coefficient  Std. err.      z    P>|z|     [95\% conf. interval]
+\HLI{13}{\PLUS}\HLI{64}
+  educ_level {\VBAR}   .0954287   .0356875     2.67   0.007     .0254825    .1653749
+       exper {\VBAR}   .0155112   .0163068     0.95   0.341    -.0164495    .0474719
+      lambda {\VBAR}  -.9183578   .7577044    -1.21   0.226    -2.403431    .5667155
+\HLI{13}{\BOTT}\HLI{64}
+Note: in the main equation, there are 2 variables; in the selection equation,
+      3 among 93 variables are used to predict inverse mills ratio.
